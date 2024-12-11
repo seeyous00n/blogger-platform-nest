@@ -6,13 +6,10 @@ import {
   UserDocument,
   UserModelType,
 } from '../domain/user.entity';
-import { Model } from 'mongoose';
 
 @Injectable()
 export class UsersRepository {
-  constructor(
-    @InjectModel(User.name) private UserModel: Model<UserModelType>,
-  ) {}
+  constructor(@InjectModel(User.name) private UserModel: UserModelType) {}
 
   async findById(id: string): Promise<UserDocument | null> {
     return this.UserModel.findOne({
@@ -21,12 +18,12 @@ export class UsersRepository {
     });
   }
 
-  async save(user: UserDocument) {
+  async save(user: UserDocument): Promise<void> {
     await user.save();
   }
 
   async findOneOrNotFoundError(id: string): Promise<UserDocument> {
-    const user = this.findById(id);
+    const user = await this.findById(id);
     if (!user) throw new NotFoundException('user not found');
 
     return user;
