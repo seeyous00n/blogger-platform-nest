@@ -10,28 +10,28 @@ import {
   Put,
   Query,
 } from '@nestjs/common';
-import { CreateBlogInputDTO } from './input-dto/create-blog.input-dto';
+import { CreateBlogInputDto } from './input-dto/create-blog-input.dto';
 import { GetBlogQueryParams } from './input-dto/get-blogs-query-params.input-dto';
-import { BloggerService } from '../application/blogs.service';
+import { BlogsService } from '../application/blogs.service';
 import { BlogsQueryRepository } from '../infrastructure/query/blogs.query-repository';
-import { UpdateBlogInputDTO } from './input-dto/update-blog.input-dto';
+import { UpdateBlogInputDto } from './input-dto/update-blog-input.dto';
 
 @Controller('blogs')
 export class BlogsController {
   constructor(
-    private blogService: BloggerService,
-    private blogQueryRepository: BlogsQueryRepository,
+    private blogsService: BlogsService,
+    private blogsQueryRepository: BlogsQueryRepository,
   ) {}
 
   @Get()
   async getAll(@Query() query: GetBlogQueryParams) {
-    return await this.blogQueryRepository.getAll(query);
+    return await this.blogsQueryRepository.getAll(query);
   }
 
   @Post()
-  async create(@Body() body: CreateBlogInputDTO) {
-    const blogId = await this.blogService.createBlog(body);
-    return await this.blogQueryRepository.getByIdOrNotFoundError(blogId);
+  async create(@Body() body: CreateBlogInputDto) {
+    const blogId = await this.blogsService.createBlog(body);
+    return await this.blogsQueryRepository.getByIdOrNotFoundError(blogId);
   }
 
   @Get(':id/posts')
@@ -42,18 +42,18 @@ export class BlogsController {
 
   @Get(':id')
   async getOne(@Param('id') id: string) {
-    return await this.blogQueryRepository.getByIdOrNotFoundError(id);
+    return await this.blogsQueryRepository.getByIdOrNotFoundError(id);
   }
 
   @Put(':id')
   @HttpCode(HttpStatus.NO_CONTENT)
-  async update(@Param('id') id: string, @Body() dto: UpdateBlogInputDTO) {
-    await this.blogService.updateBlog(id, dto);
+  async update(@Param('id') id: string, @Body() dto: UpdateBlogInputDto) {
+    await this.blogsService.updateBlog(id, dto);
   }
 
   @Delete(':id')
   @HttpCode(HttpStatus.NO_CONTENT)
   async delete(@Param('id') id: string) {
-    await this.blogService.deleteBlog(id);
+    await this.blogsService.deleteBlog(id);
   }
 }

@@ -1,4 +1,4 @@
-export class CreateBlogInputDTO {
+export class UpdateBlogInputDto {
   name: string;
   description: string;
   websiteUrl: string;
