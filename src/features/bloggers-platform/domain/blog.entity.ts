@@ -2,12 +2,7 @@ import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { HydratedDocument, Model } from 'mongoose';
 import { CreateBlogDto } from '../dto/create-blog.dto';
 import { UpdateBlogDto } from '../dto/update-blog.dto';
-
-//TODO везде дублируется, не забыть вынести
-export enum DeletionStatus {
-  NotDeleted = 'not-deleted',
-  PermanentDeleted = 'permanent-deleted',
-}
+import { DeletionStatus } from '../../../core/types/enums';
 
 @Schema({ timestamps: true })
 export class Blog {

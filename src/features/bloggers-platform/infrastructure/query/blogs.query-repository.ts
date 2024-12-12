@@ -1,11 +1,12 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Blog, BlogModelType, DeletionStatus } from '../../domain/blog.entity';
+import { Blog, BlogModelType } from '../../domain/blog.entity';
 import { BlogViewDto } from '../../api/view-dto/blog-view.dto';
 import { GetBlogQueryParams } from '../../api/input-dto/get-blogs-query-params.input-dto';
 import { PaginationViewDto } from '../../../../core/dto/base.paginated.view-dto';
 import { FilterQuery } from 'mongoose';
 import { QueryFieldsUtil } from '../../../../core/utils/queryFields.util';
+import { DeletionStatus } from '../../../../core/types/enums';
 
 @Injectable()
 export class BlogsQueryRepository {
@@ -43,12 +44,14 @@ export class BlogsQueryRepository {
   }
 
   async getByIdOrNotFoundError(id: string): Promise<BlogViewDto> {
-    const blog = await this.BlogModel.findById({
+    const blog = await this.BlogModel.findOne({
       _id: id,
       deletionStatus: { $ne: DeletionStatus.PermanentDeleted },
     });
 
-    if (!blog) throw new NotFoundException('blog not found');
+    if (!blog) {
+      throw new NotFoundException('blog not found');
+    }
 
     return BlogViewDto.mapToView(blog);
   }

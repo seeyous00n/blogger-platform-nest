@@ -13,10 +13,14 @@ import { PostsRepository } from './infrastructure/posts.repository';
 import { CommentsRepository } from './infrastructure/comments.repository';
 import { PostsQueryRepository } from './infrastructure/query/posts.query-repository';
 import { CommentsQueryRepository } from './infrastructure/query/comments.query-repository';
+import { Post, PostSchema } from './domain/post.entity';
 
 @Module({
   imports: [
-    MongooseModule.forFeature([{ name: Blog.name, schema: BlogSchema }]),
+    MongooseModule.forFeature([
+      { name: Blog.name, schema: BlogSchema },
+      { name: Post.name, schema: PostSchema },
+    ]),
   ],
   controllers: [BlogsController, PostsController, CommentsController],
   providers: [

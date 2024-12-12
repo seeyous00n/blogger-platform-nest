@@ -30,4 +30,9 @@ export class BlogsService {
     blog.makeDeleted();
     await this.blogsRepository.save(blog);
   }
+
+  async getBlogId(id: string) {
+    const blog = await this.blogsRepository.findOneOrNotFoundError(id);
+    return blog._id.toString();
+  }
 }
