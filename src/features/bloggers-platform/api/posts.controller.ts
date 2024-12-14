@@ -35,7 +35,7 @@ export class PostsController {
   }
 
   @Get(':id/comments')
-  async getCommentsByPostId() {
+  async getCommentsByPostId(@Param('id') id: string) {
     // const postId = await this.postsService.getPostId(id);
   }
 
