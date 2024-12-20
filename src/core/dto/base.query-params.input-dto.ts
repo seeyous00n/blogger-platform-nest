@@ -14,6 +14,5 @@ class PaginationParams {
 }
 
 export abstract class BaseSortablePaginationParams<T> extends PaginationParams {
-  sortDirection: SortDirection = SortDirection.Desc;
   abstract sortBy: T;
 }
