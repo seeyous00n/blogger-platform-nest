@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Post, PostModelType } from '../domain/post.entity';
 import { PostsRepository } from '../infrastructure/posts.repository';
-import { BlogsRepository } from '../infrastructure/blogs.repository';
+import { BlogsRepository } from '../../blogs/infrastructure/blogs.repository';
 import { UpdatePostDto } from '../dto/update-post.dto';
 import { CreatePostDto } from '../dto/create-post.dto';
 

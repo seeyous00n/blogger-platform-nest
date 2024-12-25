@@ -15,10 +15,10 @@ import { GetBlogQueryParams } from './input-dto/get-blogs-query-params.input-dto
 import { BlogsService } from '../application/blogs.service';
 import { BlogsQueryRepository } from '../infrastructure/query/blogs.query-repository';
 import { UpdateBlogInputDto } from './input-dto/update-blog.input-dto';
-import { PostsService } from '../application/posts.service';
-import { PostsQueryRepository } from '../infrastructure/query/posts.query-repository';
-import { GetPostsQueryParams } from './input-dto/get-posts-query-params.input-dto';
-import { CreatePostByBlogInputDTO } from './input-dto/create-post.input-dto';
+import { PostsService } from '../../posts/application/posts.service';
+import { PostsQueryRepository } from '../../posts/infrastructure/query/posts.query-repository';
+import { GetPostsQueryParams } from '../../posts/api/input-dto/get-posts-query-params.input-dto';
+import { CreatePostByBlogInputDTO } from '../../posts/api/input-dto/create-post.input-dto';
 
 @Controller('blogs')
 export class BlogsController {

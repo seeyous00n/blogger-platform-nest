@@ -1,4 +1,4 @@
-import { BaseSortablePaginationParams } from '../../../../core/dto/base.query-params.input-dto';
+import { BaseSortablePaginationParams } from '../../../../../core/dto/base.query-params.input-dto';
 
 export enum PostsSortBy {
   CreatedAt = 'createdAt',

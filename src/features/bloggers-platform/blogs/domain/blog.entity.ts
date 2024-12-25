@@ -2,7 +2,7 @@ import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { HydratedDocument, Model } from 'mongoose';
 import { CreateBlogDto } from '../dto/create-blog.dto';
 import { UpdateBlogDto } from '../dto/update-blog.dto';
-import { DeletionStatus } from '../../../core/types/enums';
+import { DeletionStatus } from '../../../../core/types/enums';
 
 @Schema({ timestamps: true })
 export class Blog {

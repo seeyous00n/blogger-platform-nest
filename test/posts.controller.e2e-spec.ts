@@ -3,7 +3,7 @@ import { TestingController } from '../src/features/testing/testing.controller';
 import { Test, TestingModule } from '@nestjs/testing';
 import { AppModule } from '../src/app.module';
 import * as request from 'supertest';
-import { GetPostsQueryParams } from '../src/features/bloggers-platform/api/input-dto/get-posts-query-params.input-dto';
+import { GetPostsQueryParams } from '../src/features/bloggers-platform/posts/api/input-dto/get-posts-query-params.input-dto';
 
 const data = {
   title: 'title1',

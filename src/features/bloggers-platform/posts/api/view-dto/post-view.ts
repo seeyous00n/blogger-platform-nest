@@ -1,5 +1,5 @@
 import { PostDocument } from '../../domain/post.entity';
-import { MyStatus } from '../../../../core/types/enums';
+import { MyStatus } from '../../../../../core/types/enums';
 
 export type NewestLikes = {
   addedAt: Date;

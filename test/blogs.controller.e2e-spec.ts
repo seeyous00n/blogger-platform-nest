@@ -1,5 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { GetBlogQueryParams } from '../src/features/bloggers-platform/api/input-dto/get-blogs-query-params.input-dto';
+import { GetBlogQueryParams } from '../src/features/bloggers-platform/blogs/api/input-dto/get-blogs-query-params.input-dto';
 import { AppModule } from '../src/app.module';
 import * as request from 'supertest';
 import { INestApplication } from '@nestjs/common';

@@ -2,10 +2,10 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Post } from '../../domain/post.entity';
 import { Model } from 'mongoose';
-import { DeletionStatus } from '../../../../core/types/enums';
+import { DeletionStatus } from '../../../../../core/types/enums';
 import { PostViewDto } from '../../api/view-dto/post-view';
 import { GetPostsQueryParams } from '../../api/input-dto/get-posts-query-params.input-dto';
-import { PaginationViewDto } from '../../../../core/dto/base.paginated.view-dto';
+import { PaginationViewDto } from '../../../../../core/dto/base.paginated.view-dto';
 
 @Injectable()
 export class PostsQueryRepository {

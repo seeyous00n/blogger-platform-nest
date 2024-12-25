@@ -1,10 +1,7 @@
-import { INestApplication, ValidationPipe } from '@nestjs/common';
+import { INestApplication } from '@nestjs/common';
+import { pipesSetup } from './pipes.setup';
 
 export function appSetup(app: INestApplication) {
-  app.useGlobalPipes(
-    new ValidationPipe({
-      transform: true,
-    }),
-  );
+  pipesSetup(app);
   app.enableCors();
 }
