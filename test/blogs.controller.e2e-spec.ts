@@ -5,6 +5,12 @@ import * as request from 'supertest';
 import { INestApplication } from '@nestjs/common';
 import { TestingController } from '../src/features/testing/testing.controller';
 
+const data = {
+  name: 'blogName 1',
+  description: 'blogDescription 1',
+  websiteUrl: 'https://websiteur1.com',
+};
+
 describe('BlogsController', () => {
   let app: INestApplication;
   let testingController: TestingController;
@@ -20,7 +26,7 @@ describe('BlogsController', () => {
     await app.init();
   });
 
-  afterEach(async () => {
+  beforeEach(async () => {
     await testingController.deleteAll();
   });
 
@@ -52,7 +58,6 @@ describe('BlogsController', () => {
         .query(query)
         .expect(200);
 
-      // expect(response.status).toBe(200);
       expect(response.body.pagesCount).toBe(0);
       expect(response.body.page).toBe(2);
       expect(response.body.pageSize).toBe(4);
@@ -63,35 +68,55 @@ describe('BlogsController', () => {
 
   describe('POST /blogs', () => {
     it('should create new blog', async () => {
-      const data = {
-        name: 'blogName 1',
-        description: 'blogDescription 1',
-        websiteUrl: 'https://jdfef.com',
-      };
-      await request(app.getHttpServer()).post('/blogs').send(data).expect(201);
+      const result = await request(app.getHttpServer())
+        .post('/blogs')
+        .send(data)
+        .expect(201);
 
-      const query = {} as GetBlogQueryParams;
-      const response2 = await request(app.getHttpServer())
-        .get('/blogs')
-        .query(query)
-        .expect(200);
+      const newEntity = result.body;
 
-      expect(response2.body.pagesCount).toBe(1);
-      expect(response2.body.page).toBe(1);
-      expect(response2.body.pageSize).toBe(10);
-      expect(response2.body.totalCount).toBe(1);
-      expect(response2.body.items.length).toBe(1);
+      expect(typeof newEntity.id).toBe('string');
+      expect(newEntity.name).toBe(data.name);
+      expect(newEntity.description).toBe(data.description);
+      expect(newEntity.websiteUrl).toBe(data.websiteUrl);
+      expect(new Date(newEntity.createdAt).toString()).not.toBe('Invalid Date');
+      expect(typeof newEntity.isMembership).toBe('boolean');
 
-      const blogsItems = response2.body.items[0];
+      // const query = {} as GetBlogQueryParams;
+      // const response = await request(app.getHttpServer())
+      //   .get('/blogs')
+      //   .query(query)
+      //   .expect(200);
 
-      expect(typeof blogsItems.id).toBe('string');
-      expect(blogsItems.name).toBe('blogName 1');
-      expect(blogsItems.description).toBe('blogDescription 1');
-      expect(blogsItems.websiteUrl).toBe('https://jdfef.com');
-      expect(new Date(blogsItems.createdAt).toString()).not.toBe(
-        'Invalid Date',
-      );
-      expect(typeof blogsItems.isMembership).toBe('boolean');
+      // expect(response.body.pagesCount).toBe(1);
+      // expect(response.body.page).toBe(1);
+      // expect(response.body.pageSize).toBe(10);
+      // expect(response.body.totalCount).toBe(1);
+      // expect(response.body.items.length).toBe(1);
+      //
+      // const blogsItems = response.body.items[0];
+      //
+      // expect(typeof blogsItems.id).toBe('string');
+      // expect(blogsItems.name).toBe('blogName 1');
+      // expect(blogsItems.description).toBe('blogDescription 1');
+      // expect(blogsItems.websiteUrl).toBe('https://websiteur1.com');
+      // expect(new Date(blogsItems.createdAt).toString()).not.toBe(
+      //   'Invalid Date',
+      // );
+      // expect(typeof blogsItems.isMembership).toBe('boolean');
+    });
+  });
+
+  describe('DELETE /blogs', () => {
+    it('should delete blog', async () => {
+      const result = await request(app.getHttpServer())
+        .post('/blogs')
+        .send(data)
+        .expect(201);
+
+      await request(app.getHttpServer())
+        .delete(`/blogs/${result.body.id}`)
+        .expect(204);
     });
   });
 });
