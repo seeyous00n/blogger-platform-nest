@@ -2,9 +2,9 @@ import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Post, PostModelType } from '../domain/post.entity';
 import { PostsRepository } from '../infrastructure/posts.repository';
-import { CreatePostInputDTO } from '../api/input-dto/create-post.input-dto';
 import { BlogsRepository } from '../infrastructure/blogs.repository';
 import { UpdatePostDto } from '../dto/update-post.dto';
+import { CreatePostDto } from '../dto/create-post.dto';
 
 @Injectable()
 export class PostsService {
@@ -14,7 +14,7 @@ export class PostsService {
     private postsRepository: PostsRepository,
   ) {}
 
-  async createPost(dto: CreatePostInputDTO) {
+  async createPost(dto: Omit<CreatePostDto, 'blogName'>) {
     const blog = await this.blogsRepository.findOneOrNotFoundError(dto.blogId);
     const post = this.PostModel.createInstance({
       ...dto,

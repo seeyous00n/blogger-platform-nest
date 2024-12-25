@@ -5,7 +5,6 @@ export enum BlogsSortBy {
   name = 'name',
   description = 'description',
   websiteUrl = 'websiteUrl',
-  id = 'id',
 }
 
 export class GetBlogQueryParams extends BaseSortablePaginationParams<BlogsSortBy> {

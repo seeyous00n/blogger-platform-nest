@@ -1,7 +1,7 @@
 import { PostDocument } from '../../domain/post.entity';
 import { MyStatus } from '../../../../core/types/enums';
 
-export type newestLikes = {
+export type NewestLikes = {
   addedAt: Date;
   userId: string;
   login: string;
@@ -11,7 +11,7 @@ export type ExtendedLikesInfo = {
   likesCount: number;
   dislikesCount: number;
   myStatus: MyStatus;
-  newestLikes: newestLikes[];
+  newestLikes: NewestLikes[];
 };
 
 export class PostViewDto {

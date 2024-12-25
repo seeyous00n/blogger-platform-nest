@@ -5,7 +5,6 @@ import { Model } from 'mongoose';
 import { DeletionStatus } from '../../../../core/types/enums';
 import { PostViewDto } from '../../api/view-dto/post-view';
 import { GetPostsQueryParams } from '../../api/input-dto/get-posts-query-params.input-dto';
-import { QueryFieldsUtil } from '../../../../core/utils/queryFields.util';
 import { PaginationViewDto } from '../../../../core/dto/base.paginated.view-dto';
 
 @Injectable()
@@ -19,21 +18,20 @@ export class PostsQueryRepository {
     id?: string,
   ): Promise<PaginationViewDto<PostViewDto[]>> {
     const filter = id ? { blogId: id } : {};
-    const queryHelper = QueryFieldsUtil.queryPagination(query);
 
     const posts = await this.postModel
       .find(filter)
-      .sort(queryHelper.sort)
-      .skip(queryHelper.skip)
-      .limit(queryHelper.limit);
+      .sort({ [query.sortBy]: query.sortDirection })
+      .skip(query.calculateSkip())
+      .limit(query.pageSize);
 
     const totalCount = await this.postModel.countDocuments(filter);
 
     const items = posts.map(PostViewDto.mapToView);
 
     return PaginationViewDto.mapToView({
-      pageNumber: queryHelper.pageNumber,
-      pageSize: queryHelper.pageSize,
+      pageNumber: query.pageNumber,
+      pageSize: query.pageSize,
       totalCount,
       items,
     });

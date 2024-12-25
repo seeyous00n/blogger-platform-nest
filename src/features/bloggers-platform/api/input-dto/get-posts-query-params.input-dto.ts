@@ -2,7 +2,6 @@ import { BaseSortablePaginationParams } from '../../../../core/dto/base.query-pa
 
 export enum PostsSortBy {
   CreatedAt = 'createdAt',
-  id = 'id',
   title = 'title',
   shortDescription = 'shortDescription',
   content = 'content',
@@ -10,5 +9,5 @@ export enum PostsSortBy {
 }
 
 export class GetPostsQueryParams extends BaseSortablePaginationParams<PostsSortBy> {
-  sortBy: PostsSortBy.CreatedAt;
+  sortBy = PostsSortBy.CreatedAt;
 }

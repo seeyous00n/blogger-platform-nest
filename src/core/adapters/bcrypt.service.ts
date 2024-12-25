@@ -1,5 +1,5 @@
 import * as bcrypt from 'bcrypt';
-
+//TODO переписать!! сделать отдельный Injectable сервис!!
 export const generatePasswordHash = async (
   password: string,
 ): Promise<string> => {

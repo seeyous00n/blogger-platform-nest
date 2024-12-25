@@ -3,7 +3,6 @@ import { DeletionStatus, User, UserModelType } from '../../domain/user.entity';
 import { UserViewDto } from '../../api/view-dto/user-view.dto';
 import { InjectModel } from '@nestjs/mongoose';
 import { GetUsersQueryParams } from '../../api/input-dto/get-users-query-params-input.dto';
-import { QueryFieldsUtil } from '../../../../core/utils/queryFields.util';
 import { PaginationViewDto } from '../../../../core/dto/base.paginated.view-dto';
 import { FilterQuery } from 'mongoose';
 
@@ -40,20 +39,18 @@ export class UsersQueryRepository {
       deletionStatus: DeletionStatus.NotDeleted,
     };
 
-    const queryHelper = QueryFieldsUtil.queryPagination(query);
-
     const users = await this.UserModel.find(fullFilter)
-      .sort(queryHelper.sort)
-      .skip(queryHelper.skip)
-      .limit(queryHelper.limit);
+      .sort({ [query.sortBy]: query.sortDirection })
+      .skip(query.calculateSkip())
+      .limit(query.pageSize);
 
     const totalCount = await this.UserModel.countDocuments(fullFilter);
 
     const items = users.map(UserViewDto.mapToView);
 
     return PaginationViewDto.mapToView({
-      pageNumber: queryHelper.pageNumber,
-      pageSize: queryHelper.pageSize,
+      pageNumber: query.pageNumber,
+      pageSize: query.pageSize,
       totalCount,
       items,
     });

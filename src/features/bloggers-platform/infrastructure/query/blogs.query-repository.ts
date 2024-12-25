@@ -5,7 +5,6 @@ import { BlogViewDto } from '../../api/view-dto/blog-view.dto';
 import { GetBlogQueryParams } from '../../api/input-dto/get-blogs-query-params.input-dto';
 import { PaginationViewDto } from '../../../../core/dto/base.paginated.view-dto';
 import { FilterQuery } from 'mongoose';
-import { QueryFieldsUtil } from '../../../../core/utils/queryFields.util';
 import { DeletionStatus } from '../../../../core/types/enums';
 
 @Injectable()
@@ -24,20 +23,18 @@ export class BlogsQueryRepository {
         }
       : {};
 
-    const queryHelper = QueryFieldsUtil.queryPagination(query);
-
     const blogs = await this.BlogModel.find(filter)
-      .sort(queryHelper.sort)
-      .skip(queryHelper.skip)
-      .limit(queryHelper.limit);
+      .sort({ [query.sortBy]: query.sortDirection })
+      .skip(query.calculateSkip())
+      .limit(query.pageSize);
 
     const totalCount = await this.BlogModel.countDocuments(filter);
 
     const items = blogs.map(BlogViewDto.mapToView);
 
     return PaginationViewDto.mapToView({
-      pageNumber: queryHelper.pageNumber,
-      pageSize: queryHelper.pageSize,
+      pageNumber: query.pageNumber,
+      pageSize: query.pageSize,
       totalCount,
       items,
     });

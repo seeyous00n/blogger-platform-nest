@@ -1,7 +1,10 @@
-import { INestApplication } from '@nestjs/common';
-import { globalPrefixSetup } from './global-prefix.setup';
+import { INestApplication, ValidationPipe } from '@nestjs/common';
 
 export function appSetup(app: INestApplication) {
-  // globalPrefixSetup(app);
+  app.useGlobalPipes(
+    new ValidationPipe({
+      transform: true,
+    }),
+  );
   app.enableCors();
 }

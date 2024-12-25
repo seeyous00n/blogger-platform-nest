@@ -1,10 +1,14 @@
+import { Type } from 'class-transformer';
+
 export enum SortDirection {
   Asc = 'asc',
   Desc = 'desc',
 }
 
 class PaginationParams {
+  @Type(() => Number)
   pageNumber: number = 1;
+  @Type(() => Number)
   pageSize: number = 10;
   sortDirection: SortDirection = SortDirection.Desc;
 
