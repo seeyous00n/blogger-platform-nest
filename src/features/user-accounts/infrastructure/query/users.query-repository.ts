@@ -1,8 +1,8 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { DeletionStatus, User, UserModelType } from '../../domain/user.entity';
-import { UserViewDto } from '../../api/view-dto/user-view.dto';
+import { UserViewDto } from '../../api/view-dto/user.view-dto';
 import { InjectModel } from '@nestjs/mongoose';
-import { GetUsersQueryParams } from '../../api/input-dto/get-users-query-params-input.dto';
+import { GetUsersQueryParams } from '../../api/input-dto/get-users-query-params.input-dto';
 import { PaginationViewDto } from '../../../../core/dto/base.paginated.view-dto';
 import { FilterQuery } from 'mongoose';
 

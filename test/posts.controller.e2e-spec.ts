@@ -1,4 +1,4 @@
-import { INestApplication } from '@nestjs/common';
+import { INestApplication, ValidationPipe } from '@nestjs/common';
 import { TestingController } from '../src/features/testing/testing.controller';
 import { Test, TestingModule } from '@nestjs/testing';
 import { AppModule } from '../src/app.module';
@@ -29,6 +29,12 @@ describe('PostsController', () => {
     testingController = moduleFixture.get<TestingController>(TestingController);
 
     app = moduleFixture.createNestApplication();
+    app.useGlobalPipes(
+      new ValidationPipe({
+        transform: true,
+      }),
+    );
+
     await app.init();
   });
 
@@ -77,6 +83,17 @@ describe('PostsController', () => {
       expect(newEntity.blogId).toBe(newBlog.body.id);
       expect(newEntity.blogName).toBe(newBlog.body.name);
       expect(new Date(newEntity.createdAt).toString()).not.toBe('Invalid Date');
+
+      const query = {} as GetPostsQueryParams;
+      await request(app.getHttpServer())
+        .get(`/posts/${newEntity.id}`)
+        .query(query)
+        .expect(200);
+
+      await request(app.getHttpServer())
+        .get(`/posts`)
+        .query({ sortBy: 'blogName' })
+        .expect(200);
     });
   });
 

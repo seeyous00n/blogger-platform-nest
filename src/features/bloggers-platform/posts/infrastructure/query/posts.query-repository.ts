@@ -1,17 +1,14 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Post } from '../../domain/post.entity';
-import { Model } from 'mongoose';
+import { Post, PostModelType } from '../../domain/post.entity';
 import { DeletionStatus } from '../../../../../core/types/enums';
-import { PostViewDto } from '../../api/view-dto/post-view';
+import { PostViewDto } from '../../api/view-dto/post.view-dto';
 import { GetPostsQueryParams } from '../../api/input-dto/get-posts-query-params.input-dto';
 import { PaginationViewDto } from '../../../../../core/dto/base.paginated.view-dto';
 
 @Injectable()
 export class PostsQueryRepository {
-  constructor(
-    @InjectModel(Post.name) private readonly postModel: Model<Post>,
-  ) {}
+  constructor(@InjectModel(Post.name) private PostModel: PostModelType) {}
 
   async getAll(
     query: GetPostsQueryParams,
@@ -19,13 +16,12 @@ export class PostsQueryRepository {
   ): Promise<PaginationViewDto<PostViewDto[]>> {
     const filter = id ? { blogId: id } : {};
 
-    const posts = await this.postModel
-      .find(filter)
+    const posts = await this.PostModel.find(filter)
       .sort({ [query.sortBy]: query.sortDirection })
       .skip(query.calculateSkip())
       .limit(query.pageSize);
 
-    const totalCount = await this.postModel.countDocuments(filter);
+    const totalCount = await this.PostModel.countDocuments(filter);
 
     const items = posts.map(PostViewDto.mapToView);
 
@@ -38,7 +34,7 @@ export class PostsQueryRepository {
   }
 
   async getByIdOrNotFoundError(id: string): Promise<PostViewDto> {
-    const post = await this.postModel.findOne({
+    const post = await this.PostModel.findOne({
       _id: id,
       deletionStatus: { $ne: DeletionStatus.PermanentDeleted },
     });

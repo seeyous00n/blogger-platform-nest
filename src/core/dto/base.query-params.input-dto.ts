@@ -1,4 +1,5 @@
 import { Type } from 'class-transformer';
+import { IsEnum } from 'class-validator';
 
 export enum SortDirection {
   Asc = 'asc',
@@ -8,8 +9,11 @@ export enum SortDirection {
 class PaginationParams {
   @Type(() => Number)
   pageNumber: number = 1;
+
   @Type(() => Number)
   pageSize: number = 10;
+
+  @IsEnum(SortDirection)
   sortDirection: SortDirection = SortDirection.Desc;
 
   calculateSkip() {

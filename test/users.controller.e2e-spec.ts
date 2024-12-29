@@ -1,8 +1,8 @@
-import { INestApplication } from '@nestjs/common';
+import { INestApplication, ValidationPipe } from '@nestjs/common';
 import { TestingController } from '../src/features/testing/testing.controller';
 import { Test, TestingModule } from '@nestjs/testing';
 import { AppModule } from '../src/app.module';
-import { GetUsersQueryParams } from '../src/features/user-accounts/api/input-dto/get-users-query-params-input.dto';
+import { GetUsersQueryParams } from '../src/features/user-accounts/api/input-dto/get-users-query-params.input-dto';
 import * as request from 'supertest';
 
 const data = {
@@ -23,6 +23,12 @@ describe('UsersController', () => {
     testingController = moduleFixture.get<TestingController>(TestingController);
 
     app = moduleFixture.createNestApplication();
+    app.useGlobalPipes(
+      new ValidationPipe({
+        transform: true,
+      }),
+    );
+
     await app.init();
   });
 

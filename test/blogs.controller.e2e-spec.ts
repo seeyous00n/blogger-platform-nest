@@ -2,7 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { GetBlogQueryParams } from '../src/features/bloggers-platform/blogs/api/input-dto/get-blogs-query-params.input-dto';
 import { AppModule } from '../src/app.module';
 import * as request from 'supertest';
-import { INestApplication } from '@nestjs/common';
+import { INestApplication, ValidationPipe } from '@nestjs/common';
 import { TestingController } from '../src/features/testing/testing.controller';
 
 const data = {
@@ -23,6 +23,12 @@ describe('BlogsController', () => {
     testingController = moduleFixture.get<TestingController>(TestingController);
 
     app = moduleFixture.createNestApplication();
+    app.useGlobalPipes(
+      new ValidationPipe({
+        transform: true,
+      }),
+    );
+
     await app.init();
   });
 
@@ -55,9 +61,9 @@ describe('BlogsController', () => {
 
       const response = await request(app.getHttpServer())
         .get('/blogs')
-        .query(query)
-        .expect(200);
+        .query(query);
 
+      expect(response.status).toBe(200);
       expect(response.body.pagesCount).toBe(0);
       expect(response.body.page).toBe(2);
       expect(response.body.pageSize).toBe(4);
