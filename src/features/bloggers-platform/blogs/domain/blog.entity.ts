@@ -4,15 +4,27 @@ import { CreateBlogDto } from '../dto/create-blog.dto';
 import { UpdateBlogDto } from '../dto/update-blog.dto';
 import { DeletionStatus } from '../../../../core/types/enums';
 
+export const blogNameConstraints = {
+  maxLength: 15,
+};
+
+export const blogDescriptionConstraints = {
+  maxLength: 500,
+};
+
+export const blogWebsiteUrlConstraints = {
+  maxLength: 100,
+};
+
 @Schema({ timestamps: true })
 export class Blog {
-  @Prop({ type: String, required: true })
+  @Prop({ type: String, required: true, ...blogNameConstraints })
   name: string;
 
-  @Prop({ type: String, required: true })
+  @Prop({ type: String, required: true, ...blogDescriptionConstraints })
   description: string;
 
-  @Prop({ type: String, required: true })
+  @Prop({ type: String, required: true, ...blogWebsiteUrlConstraints })
   websiteUrl: string;
 
   @Prop({ type: Boolean, default: false })

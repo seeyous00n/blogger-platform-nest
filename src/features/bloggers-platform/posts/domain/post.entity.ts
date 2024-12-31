@@ -4,15 +4,25 @@ import { CreatePostDto } from '../dto/create-post.dto';
 import { HydratedDocument, Model } from 'mongoose';
 import { UpdatePostDto } from '../dto/update-post.dto';
 
+export const postTitleConstraints = {
+  maxLength: 30,
+};
+export const postShortDescriptionConstraints = {
+  maxLength: 100,
+};
+export const postContentConstraints = {
+  maxLength: 1000,
+};
+
 @Schema({ timestamps: true })
 export class Post {
-  @Prop({ type: String, required: true })
+  @Prop({ type: String, required: true, ...postTitleConstraints })
   title: string;
 
-  @Prop({ type: String, required: true })
+  @Prop({ type: String, required: true, ...postShortDescriptionConstraints })
   shortDescription: string;
 
-  @Prop({ type: String, required: true })
+  @Prop({ type: String, required: true, ...postContentConstraints })
   content: string;
 
   @Prop({ type: String, required: true })

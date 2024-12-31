@@ -1,15 +1,19 @@
-import { IsString, MaxLength } from 'class-validator';
+import { IsUrl, MaxLength } from 'class-validator';
+import { IsStringWithTrim } from '../../../../../core/decorators/validation/is-string-with-trim';
+import {
+  blogDescriptionConstraints,
+  blogNameConstraints,
+  blogWebsiteUrlConstraints,
+} from '../../domain/blog.entity';
 
 export class UpdateBlogInputDto {
-  @IsString()
-  @MaxLength(15)
+  @IsStringWithTrim(1, blogNameConstraints.maxLength)
   name: string;
 
-  @IsString()
-  @MaxLength(500)
+  @IsStringWithTrim(1, blogDescriptionConstraints.maxLength)
   description: string;
 
-  @IsString()
-  @MaxLength(100)
+  @IsUrl()
+  @MaxLength(blogWebsiteUrlConstraints.maxLength)
   websiteUrl: string;
 }

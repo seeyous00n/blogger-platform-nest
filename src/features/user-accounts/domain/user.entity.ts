@@ -7,9 +7,19 @@ export enum DeletionStatus {
   PermanentDeleted = 'permanent-deleted',
 }
 
+export const loginConstraints = {
+  minLength: 3,
+  maxLength: 10,
+};
+
+export const passwordConstraints = {
+  minLength: 6,
+  maxLength: 20,
+};
+
 @Schema({ timestamps: true })
 export class User {
-  @Prop({ type: String, required: true })
+  @Prop({ type: String, required: true, ...loginConstraints })
   login: string;
 
   @Prop({ type: String, required: true })

@@ -1,16 +1,19 @@
-import { IsString, MaxLength } from 'class-validator';
+import { IsString } from 'class-validator';
+import {
+  postContentConstraints,
+  postShortDescriptionConstraints,
+  postTitleConstraints,
+} from '../../domain/post.entity';
+import { IsStringWithTrim } from '../../../../../core/decorators/validation/is-string-with-trim';
 
 export class CreatePostInputDTO {
-  @IsString()
-  @MaxLength(30)
+  @IsStringWithTrim(1, postTitleConstraints.maxLength)
   title: string;
 
-  @IsString()
-  @MaxLength(100)
+  @IsStringWithTrim(1, postShortDescriptionConstraints.maxLength)
   shortDescription: string;
 
-  @IsString()
-  @MaxLength(1000)
+  @IsStringWithTrim(1, postContentConstraints.maxLength)
   content: string;
 
   @IsString()
@@ -18,15 +21,12 @@ export class CreatePostInputDTO {
 }
 
 export class CreatePostByBlogInputDTO {
-  @IsString()
-  @MaxLength(30)
+  @IsStringWithTrim(1, postTitleConstraints.maxLength)
   title: string;
 
-  @IsString()
-  @MaxLength(100)
+  @IsStringWithTrim(1, postShortDescriptionConstraints.maxLength)
   shortDescription: string;
 
-  @IsString()
-  @MaxLength(1000)
+  @IsStringWithTrim(1, postContentConstraints.maxLength)
   content: string;
 }

@@ -4,12 +4,17 @@ import { HydratedDocument, Model } from 'mongoose';
 import { CreateCommentDto } from '../dto/create-comment.dto';
 import { UpdateCommentDto } from '../dto/update-comment.dto';
 
+export const commentUpdateConstraints = {
+  minLength: 20,
+  maxLength: 300,
+};
+
 @Schema({ timestamps: true })
 export class Comment {
   @Prop({ type: String, required: true })
   postId: string;
 
-  @Prop({ type: String, required: true })
+  @Prop({ type: String, required: true, ...commentUpdateConstraints })
   content: string;
 
   @Prop({
