@@ -8,11 +8,13 @@ import {
   Param,
   Post,
   Query,
+  UseGuards,
 } from '@nestjs/common';
 import { CreateUserInputDto } from './input-dto/create-user.input-dto';
 import { UsersService } from '../application/users.service';
 import { UsersQueryRepository } from '../infrastructure/query/users.query-repository';
 import { GetUsersQueryParams } from './input-dto/get-users-query-params.input-dto';
+import { BasicAuthGuard } from '../guards/basic-auth.guard';
 
 @Controller('users')
 export class UsersController {
@@ -21,11 +23,13 @@ export class UsersController {
     private usersQueryRepository: UsersQueryRepository,
   ) {}
 
+  @UseGuards(BasicAuthGuard)
   @Get()
   async getAll(@Query() query: GetUsersQueryParams) {
     return await this.usersQueryRepository.getAll(query);
   }
 
+  @UseGuards(BasicAuthGuard)
   @Post()
   async create(@Body() body: CreateUserInputDto) {
     const userId = await this.usersService.createUser(body);
@@ -33,6 +37,7 @@ export class UsersController {
     return await this.usersQueryRepository.getByIdOrNotFoundError(userId);
   }
 
+  @UseGuards(BasicAuthGuard)
   @Delete(':id')
   @HttpCode(HttpStatus.NO_CONTENT)
   async delete(@Param('id') id: string) {
