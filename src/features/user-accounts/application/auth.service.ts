@@ -30,7 +30,9 @@ export class AuthService {
   ) {}
 
   async checkCredentials(data: LoginUserInputDto): Promise<string> {
-    const result = await this.usersRepository.findByLoginOrEmail(data);
+    const result = await this.usersRepository.findByLoginOrEmail(
+      data.loginOrEmail,
+    );
     if (!result)
       throw new HttpException('UNAUTHORIZED', HttpStatus.UNAUTHORIZED);
 
