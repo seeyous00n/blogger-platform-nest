@@ -1,4 +1,10 @@
-import { CanActivate, ExecutionContext, Injectable } from '@nestjs/common';
+import {
+  CanActivate,
+  ExecutionContext,
+  Injectable,
+  UnauthorizedException,
+} from '@nestjs/common';
+import { Request } from 'express';
 
 const BASIC = 'Basic';
 const adminLogin = 'admin';
@@ -8,20 +14,27 @@ const adminPassword = 'qwerty';
 export class BasicAuthGuard implements CanActivate {
   canActivate(context: ExecutionContext) {
     const request = context.switchToHttp().getRequest();
-    const authHeader = request.headers.authorization;
 
-    if (!authHeader) {
-      return false;
-    }
-
-    const [type, credentialsHash] = authHeader.split(' ');
-    if (type !== BASIC) {
-      return false;
+    const credentialsHash = this.extractCredentialsHashFromHeader(request);
+    if (!credentialsHash) {
+      throw new UnauthorizedException();
     }
 
     const credentials = Buffer.from(credentialsHash, 'base64').toString();
     const [userName, password] = credentials.split(':');
 
-    return userName === adminLogin && password === adminPassword;
+    if (userName !== adminLogin || password !== adminPassword) {
+      throw new UnauthorizedException();
+    }
+
+    return true;
+  }
+
+  private extractCredentialsHashFromHeader(
+    request: Request,
+  ): string | undefined {
+    const [type, credentialsHash] =
+      request.headers.authorization?.split(' ') ?? [];
+    return type === BASIC ? credentialsHash : undefined;
   }
 }
