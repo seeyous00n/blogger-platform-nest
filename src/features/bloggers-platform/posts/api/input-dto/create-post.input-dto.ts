@@ -5,6 +5,7 @@ import {
   postTitleConstraints,
 } from '../../domain/post.entity';
 import { IsStringWithTrim } from '../../../../../core/decorators/validation/is-string-with-trim';
+import { BlogIdIsExist } from '../../../../../core/decorators/validation/login-is-exist.decorator';
 
 export class CreatePostInputDTO {
   @IsStringWithTrim(1, postTitleConstraints.maxLength)
@@ -17,6 +18,7 @@ export class CreatePostInputDTO {
   content: string;
 
   @IsString()
+  @BlogIdIsExist()
   blogId: string;
 }
 

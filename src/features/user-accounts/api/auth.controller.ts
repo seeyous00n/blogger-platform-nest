@@ -6,15 +6,25 @@ import {
   HttpStatus,
   Post,
   Res,
+  UseGuards,
 } from '@nestjs/common';
 import { Response } from 'express';
 import { AuthService } from '../application/auth.service';
-import { CreateUserDto } from '../dto/create-user.dto';
 import { LoginUserInputDto } from './input-dto/login-user.input-dto';
 import {
   IpAndUserAgent,
   IpAndUserAgentType,
 } from '../../../core/decorators/ip-and-user-agent.param.decorator';
+import { JwtAuthGuard } from '../guards/jwt-auth.guard';
+import { userIdFromParam } from '../../../core/decorators/userId-from-request.param.decorator';
+import { UsersQueryRepository } from '../infrastructure/query/users.query-repository';
+import { UserViewAuthDto } from './view-dto/user.view-dto';
+import { UsersService } from '../application/users.service';
+import { ConfirmationCodeInputDto } from './input-dto/confirmation-code.input-dto';
+import { EmailInputDto } from './input-dto/email.input-dto';
+import { NewPasswordInputDto } from './input-dto/new-password.input-dto';
+import { CreateUserInputDto } from './input-dto/create-user.input-dto';
+import { NotFoundDomainException } from '../../../core/exceptions/domain-exception';
 
 const TOKENS_NAME = {
   REFRESH_TOKEN: 'refreshToken',
@@ -29,7 +39,11 @@ const cookiesData = {
 
 @Controller('auth')
 export class AuthController {
-  constructor(private authService: AuthService) {}
+  constructor(
+    private authService: AuthService,
+    private usersQueryRepository: UsersQueryRepository,
+    private usersService: UsersService,
+  ) {}
 
   @Post('login')
   @HttpCode(HttpStatus.OK)
@@ -52,20 +66,40 @@ export class AuthController {
       authData.refreshToken,
       cookiesData,
     );
+
     return { [TOKENS_NAME.ACCESS_TOKEN]: authData.accessToken };
   }
 
-  @Get()
-  async getMe() {}
+  @UseGuards(JwtAuthGuard)
+  @Get('me')
+  async getMe(@userIdFromParam() userId: string): Promise<UserViewAuthDto> {
+    const user =
+      this.usersQueryRepository.getAuthUserByIdOrNotFoundError(userId);
+    if (!user) {
+      throw NotFoundDomainException.create('user not found');
+    }
+
+    return user;
+  }
 
   @Post('registration')
-  async registration(@Body() body: CreateUserDto) {}
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async registration(@Body() body: CreateUserInputDto) {
+    const userId = await this.usersService.createUser(body);
+    await this.authService.registration(userId);
+  }
 
-  @Post()
-  async confirmationEmail() {}
+  @Post('registration-confirmation')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async confirmationEmail(@Body() body: ConfirmationCodeInputDto) {
+    await this.authService.confirmation(body.code);
+  }
 
-  @Post()
-  async resendingEmail() {}
+  @Post('registration-email-resending')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async resendingEmail(@Body() body: EmailInputDto) {
+    await this.authService.resending(body.email);
+  }
 
   @Post()
   async refreshToken() {}
@@ -73,9 +107,15 @@ export class AuthController {
   @Post()
   async logout() {}
 
-  @Post()
-  async passwordRecovery() {}
+  @Post('password-recovery')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async passwordRecovery(@Body() body: EmailInputDto) {
+    await this.authService.recovery(body.email);
+  }
 
-  @Post()
-  async newPassword() {}
+  @Post('new-password')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async newPassword(@Body() body: NewPasswordInputDto) {
+    await this.authService.newPassword(body.recoveryCode, body.newPassword);
+  }
 }

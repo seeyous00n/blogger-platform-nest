@@ -1,86 +1,109 @@
-import { INestApplication, ValidationPipe } from '@nestjs/common';
-import { TestingController } from '../src/features/testing/testing.controller';
-import { Test, TestingModule } from '@nestjs/testing';
-import { AppModule } from '../src/app.module';
+import { HttpStatus, INestApplication } from '@nestjs/common';
 import { GetUsersQueryParams } from '../src/features/user-accounts/api/input-dto/get-users-query-params.input-dto';
 import * as request from 'supertest';
-
-const data = {
-  login: 'userlogin1',
-  password: 'userpassword1',
-  email: 'email1@example.com',
-};
+import { deleteAllData } from './helpers/delete-all-data';
+import { initSettings } from './helpers/init-settings';
+import { authBasicData, newUserData } from './mock/mock-data';
+import { UserTestManager } from './helpers/user-test-manager';
 
 describe('UsersController', () => {
   let app: INestApplication;
-  let testingController: TestingController;
+  let httpServer;
+  let userTestManager: UserTestManager;
 
   beforeEach(async () => {
-    const moduleFixture: TestingModule = await Test.createTestingModule({
-      imports: [AppModule],
-    }).compile();
+    const result = await initSettings();
 
-    testingController = moduleFixture.get<TestingController>(TestingController);
-
-    app = moduleFixture.createNestApplication();
-    app.useGlobalPipes(
-      new ValidationPipe({
-        transform: true,
-      }),
-    );
-
-    await app.init();
+    app = result.app;
+    httpServer = result.httpServer;
+    userTestManager = result.userTestManager;
   });
 
   beforeEach(async () => {
-    await testingController.deleteAll();
+    await deleteAllData(app);
   });
 
   afterAll(async () => {
     await app.close();
   });
 
-  describe('GET /users', () => {
-    it('should return [] with pagination', async () => {
-      const query = {} as GetUsersQueryParams;
-      const response = await request(app.getHttpServer())
-        .get('/users')
-        .query(query);
+  describe('POST /users', () => {
+    it('should create new user | code 201', async () => {
+      const user = await userTestManager.createUser(newUserData);
 
-      expect(response.status).toBe(200);
-      expect(response.body.pagesCount).toBe(0);
-      expect(response.body.page).toBe(1);
-      expect(response.body.pageSize).toBe(10);
-      expect(response.body.totalCount).toBe(0);
-      expect(response.body.items).toStrictEqual([]);
+      expect(typeof user.id).toBe('string');
+      expect(user.login).toBe(newUserData.login);
+      expect(user.email).toBe(newUserData.email);
+      expect(new Date(user.createdAt).toString()).not.toBe('Invalid Date');
+    });
+
+    it('should return error message | field - user', async () => {
+      const response = await request(app.getHttpServer())
+        .post('/users')
+        .auth(authBasicData.login, authBasicData.password)
+        .send({ ...newUserData, login: 'sm' })
+        .expect(HttpStatus.BAD_REQUEST);
+
+      expect(response.body.errorsMessages[0].field).toBe('login');
     });
   });
 
-  describe('POST /users', () => {
-    it('should create new user', async () => {
-      const result = await request(app.getHttpServer())
-        .post('/users')
-        .send(data)
-        .expect(201);
+  describe('GET /users', () => {
+    it('should return [] with pagination', async () => {
+      const query = {} as GetUsersQueryParams;
+      const users = await userTestManager.getUsers(query);
 
-      const newEntity = result.body;
-      expect(typeof newEntity.id).toBe('string');
-      expect(newEntity.login).toBe(data.login);
-      expect(newEntity.email).toBe(data.email);
-      expect(new Date(newEntity.createdAt).toString()).not.toBe('Invalid Date');
+      expect(users.pagesCount).toBe(0);
+      expect(users.page).toBe(1);
+      expect(users.pageSize).toBe(10);
+      expect(users.totalCount).toBe(0);
+      expect(users.items).toStrictEqual([]);
+    });
+
+    it('should return users with pagination', async () => {
+      const query = { pageNumber: 2, pageSize: 2 } as GetUsersQueryParams;
+
+      await userTestManager.createSeveralUsers(5);
+      const usersWithPagination = await userTestManager.getUsers(query);
+
+      expect(usersWithPagination.pagesCount).toBe(3);
+      expect(usersWithPagination.page).toBe(2);
+      expect(usersWithPagination.pageSize).toBe(2);
+
+      expect(usersWithPagination.totalCount).toBe(5);
+      expect(usersWithPagination.items.length).toBe(2);
+    });
+
+    it('should create 5 users and delete first user, result with pagination', async () => {
+      const users = await userTestManager.createSeveralUsers(5);
+
+      await request(httpServer)
+        .delete(`/users/${users[0].id}`)
+        .auth(authBasicData.login, authBasicData.password)
+        .expect(204);
+
+      const usersWithPagination = await userTestManager.getUsers();
+
+      expect(usersWithPagination.totalCount).toBe(4);
+      expect(usersWithPagination.items.length).toBe(4);
     });
   });
 
   describe('DELETE /users', () => {
     it('should delete a user', async () => {
-      const result = await request(app.getHttpServer())
-        .post('/users')
-        .send(data)
-        .expect(201);
+      const user = await userTestManager.createUser(newUserData);
 
-      await request(app.getHttpServer())
-        .delete(`/users/${result.body.id}`)
+      await request(httpServer)
+        .delete(`/users/${user.id}`)
+        .auth(authBasicData.login, authBasicData.password)
         .expect(204);
+    });
+
+    it('should return code 400, when attempting to delete', async () => {
+      await request(httpServer)
+        .delete(`/users/312`)
+        .auth(authBasicData.login, authBasicData.password)
+        .expect(HttpStatus.BAD_REQUEST);
     });
   });
 });

@@ -19,6 +19,7 @@ import { PostsService } from '../../posts/application/posts.service';
 import { PostsQueryRepository } from '../../posts/infrastructure/query/posts.query-repository';
 import { GetPostsQueryParams } from '../../posts/api/input-dto/get-posts-query-params.input-dto';
 import { CreatePostByBlogInputDTO } from '../../posts/api/input-dto/create-post.input-dto';
+import { NotFoundDomainException } from '../../../../core/exceptions/domain-exception';
 
 @Controller('blogs')
 export class BlogsController {
@@ -31,13 +32,19 @@ export class BlogsController {
 
   @Get()
   async getAll(@Query() query: GetBlogQueryParams) {
-    return await this.blogsQueryRepository.getAll(query);
+    return this.blogsQueryRepository.getAll(query);
   }
 
   @Post()
   async create(@Body() body: CreateBlogInputDto) {
     const blogId = await this.blogsService.createBlog(body);
-    return await this.blogsQueryRepository.getByIdOrNotFoundError(blogId);
+    const blog = await this.blogsQueryRepository.getByIdOrNotFoundError(blogId);
+
+    if (!blog) {
+      throw NotFoundDomainException.create('blog not found');
+    }
+
+    return blog;
   }
 
   @Get(':id/posts')
@@ -46,7 +53,7 @@ export class BlogsController {
     @Param('id') id: string,
   ) {
     const blogId = await this.blogsService.getBlogId(id);
-    return await this.postsQueryRepository.getAll(query, blogId);
+    return this.postsQueryRepository.getAll(query, blogId);
   }
 
   @Post(':id/posts')
@@ -55,12 +62,24 @@ export class BlogsController {
     @Body() body: CreatePostByBlogInputDTO,
   ) {
     const postId = await this.postsService.createPost({ ...body, blogId: id });
-    return await this.postsQueryRepository.getByIdOrNotFoundError(postId);
+    const result =
+      await this.postsQueryRepository.getByIdOrNotFoundError(postId);
+
+    if (!result) {
+      throw NotFoundDomainException.create('blog not found');
+    }
+
+    return result;
   }
 
   @Get(':id')
   async getOne(@Param('id') id: string) {
-    return await this.blogsQueryRepository.getByIdOrNotFoundError(id);
+    const blog = await this.blogsQueryRepository.getByIdOrNotFoundError(id);
+    if (!blog) {
+      throw NotFoundDomainException.create('blog not found');
+    }
+
+    return blog;
   }
 
   @Put(':id')

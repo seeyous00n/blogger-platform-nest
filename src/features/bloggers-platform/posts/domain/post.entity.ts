@@ -55,7 +55,6 @@ export class Post {
     this.blogId = dto.blogId;
   }
 
-  //TODO move to the general class
   makeDeleted() {
     if (this.deletionStatus !== DeletionStatus.NotDeleted) {
       throw new Error('Entity already deleted');

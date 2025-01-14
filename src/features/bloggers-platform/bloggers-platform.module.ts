@@ -15,6 +15,7 @@ import { PostsQueryRepository } from './posts/infrastructure/query/posts.query-r
 import { CommentsQueryRepository } from './comments/infrastructure/query/comments.query-repository';
 import { Post, PostSchema } from './posts/domain/post.entity';
 import { Comment, CommentSchema } from './comments/domain/comment.entity';
+import { BlogIdIsExistConstraint } from '../../core/decorators/validation/login-is-exist.decorator';
 
 @Module({
   imports: [
@@ -35,6 +36,7 @@ import { Comment, CommentSchema } from './comments/domain/comment.entity';
     CommentsService,
     CommentsRepository,
     CommentsQueryRepository,
+    BlogIdIsExistConstraint,
   ],
   exports: [MongooseModule],
 })

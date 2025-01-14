@@ -15,6 +15,8 @@ import { UsersService } from '../application/users.service';
 import { UsersQueryRepository } from '../infrastructure/query/users.query-repository';
 import { GetUsersQueryParams } from './input-dto/get-users-query-params.input-dto';
 import { BasicAuthGuard } from '../guards/basic-auth.guard';
+import { ObjectIdValidationPipe } from '../../../core/pipes/object-id-validation-pipe.service';
+import { NotFoundDomainException } from '../../../core/exceptions/domain-exception';
 
 @Controller('users')
 export class UsersController {
@@ -26,21 +28,27 @@ export class UsersController {
   @UseGuards(BasicAuthGuard)
   @Get()
   async getAll(@Query() query: GetUsersQueryParams) {
-    return await this.usersQueryRepository.getAll(query);
+    return this.usersQueryRepository.getAll(query);
   }
 
   @UseGuards(BasicAuthGuard)
   @Post()
   async create(@Body() body: CreateUserInputDto) {
     const userId = await this.usersService.createUser(body);
+    await this.usersService.updateIsConfirmed(userId);
 
-    return await this.usersQueryRepository.getByIdOrNotFoundError(userId);
+    const user = await this.usersQueryRepository.getByIdOrNotFoundError(userId);
+    if (!user) {
+      throw NotFoundDomainException.create('user not found');
+    }
+
+    return user;
   }
 
   @UseGuards(BasicAuthGuard)
   @Delete(':id')
   @HttpCode(HttpStatus.NO_CONTENT)
-  async delete(@Param('id') id: string) {
+  async delete(@Param('id', new ObjectIdValidationPipe()) id: string) {
     await this.usersService.deleteUser(id);
   }
 }

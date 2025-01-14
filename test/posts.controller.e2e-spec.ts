@@ -1,45 +1,23 @@
-import { INestApplication, ValidationPipe } from '@nestjs/common';
-import { TestingController } from '../src/features/testing/testing.controller';
-import { Test, TestingModule } from '@nestjs/testing';
-import { AppModule } from '../src/app.module';
+import { INestApplication } from '@nestjs/common';
 import * as request from 'supertest';
 import { GetPostsQueryParams } from '../src/features/bloggers-platform/posts/api/input-dto/get-posts-query-params.input-dto';
-
-const data = {
-  title: 'title1',
-  shortDescription: 'short description1',
-  content: 'content 1',
-};
-
-const dataBlog = {
-  name: 'blogName 1',
-  description: 'blogDescription 1',
-  websiteUrl: 'https://websiteur1.com',
-};
+import { deleteAllData } from './helpers/delete-all-data';
+import { initSettings } from './helpers/init-settings';
+import { newBlogData, newPostData } from './mock/mock-data';
 
 describe('PostsController', () => {
   let app: INestApplication;
-  let testingController: TestingController;
+  let httpServer;
 
   beforeEach(async () => {
-    const moduleFixture: TestingModule = await Test.createTestingModule({
-      imports: [AppModule],
-    }).compile();
+    const result = await initSettings();
 
-    testingController = moduleFixture.get<TestingController>(TestingController);
-
-    app = moduleFixture.createNestApplication();
-    app.useGlobalPipes(
-      new ValidationPipe({
-        transform: true,
-      }),
-    );
-
-    await app.init();
+    app = result.app;
+    httpServer = result.httpServer;
   });
 
   beforeEach(async () => {
-    await testingController.deleteAll();
+    await deleteAllData(app);
   });
 
   afterAll(async () => {
@@ -49,7 +27,7 @@ describe('PostsController', () => {
   describe('GET /posts', () => {
     it('should return [] with pagination', async () => {
       const query = {} as GetPostsQueryParams;
-      const response = await request(app.getHttpServer())
+      const response = await request(httpServer)
         .get('/posts')
         .query(query)
         .expect(200);
@@ -64,33 +42,33 @@ describe('PostsController', () => {
 
   describe('POST /posts', () => {
     it('should create new post', async () => {
-      const newBlog = await request(app.getHttpServer())
+      const newBlog = await request(httpServer)
         .post('/blogs')
-        .send(dataBlog)
+        .send(newBlogData)
         .expect(201);
 
-      const result = await request(app.getHttpServer())
+      const result = await request(httpServer)
         .post('/posts')
-        .send({ ...data, blogId: newBlog.body.id })
+        .send({ ...newPostData, blogId: newBlog.body.id })
         .expect(201);
 
       const newEntity = result.body;
 
       expect(typeof newEntity.id).toBe('string');
-      expect(newEntity.title).toBe(data.title);
-      expect(newEntity.shortDescription).toBe(data.shortDescription);
-      expect(newEntity.content).toBe(data.content);
+      expect(newEntity.title).toBe(newPostData.title);
+      expect(newEntity.shortDescription).toBe(newPostData.shortDescription);
+      expect(newEntity.content).toBe(newPostData.content);
       expect(newEntity.blogId).toBe(newBlog.body.id);
       expect(newEntity.blogName).toBe(newBlog.body.name);
       expect(new Date(newEntity.createdAt).toString()).not.toBe('Invalid Date');
 
       const query = {} as GetPostsQueryParams;
-      await request(app.getHttpServer())
+      await request(httpServer)
         .get(`/posts/${newEntity.id}`)
         .query(query)
         .expect(200);
 
-      await request(app.getHttpServer())
+      await request(httpServer)
         .get(`/posts`)
         .query({ sortBy: 'blogName' })
         .expect(200);
@@ -99,19 +77,17 @@ describe('PostsController', () => {
 
   describe('DELETE /posts', () => {
     it('should delete a post', async () => {
-      const newBlog = await request(app.getHttpServer())
+      const newBlog = await request(httpServer)
         .post('/blogs')
-        .send(dataBlog)
+        .send(newBlogData)
         .expect(201);
 
-      const result = await request(app.getHttpServer())
+      const result = await request(httpServer)
         .post('/posts')
-        .send({ ...data, blogId: newBlog.body.id })
+        .send({ ...newPostData, blogId: newBlog.body.id })
         .expect(201);
 
-      await request(app.getHttpServer())
-        .delete(`/posts/${result.body.id}`)
-        .expect(204);
+      await request(httpServer).delete(`/posts/${result.body.id}`).expect(204);
     });
   });
 });

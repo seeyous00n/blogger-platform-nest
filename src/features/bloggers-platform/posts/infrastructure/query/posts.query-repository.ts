@@ -1,10 +1,11 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Post, PostModelType } from '../../domain/post.entity';
 import { DeletionStatus } from '../../../../../core/types/enums';
 import { PostViewDto } from '../../api/view-dto/post.view-dto';
 import { GetPostsQueryParams } from '../../api/input-dto/get-posts-query-params.input-dto';
 import { PaginationViewDto } from '../../../../../core/dto/base.paginated.view-dto';
+import { FilterQuery } from 'mongoose';
 
 @Injectable()
 export class PostsQueryRepository {
@@ -14,7 +15,13 @@ export class PostsQueryRepository {
     query: GetPostsQueryParams,
     id?: string,
   ): Promise<PaginationViewDto<PostViewDto[]>> {
-    const filter = id ? { blogId: id } : {};
+    const filter: FilterQuery<Post> = {
+      deletionStatus: { $ne: DeletionStatus.PermanentDeleted },
+    };
+
+    if (id) {
+      filter.blogId = id;
+    }
 
     const posts = await this.PostModel.find(filter)
       .sort({ [query.sortBy]: query.sortDirection })
@@ -33,13 +40,15 @@ export class PostsQueryRepository {
     });
   }
 
-  async getByIdOrNotFoundError(id: string): Promise<PostViewDto> {
+  async getByIdOrNotFoundError(id: string): Promise<PostViewDto | null> {
     const post = await this.PostModel.findOne({
       _id: id,
       deletionStatus: { $ne: DeletionStatus.PermanentDeleted },
     });
 
-    if (!post) throw new NotFoundException('post not found');
+    if (!post) {
+      return null;
+    }
 
     return PostViewDto.mapToView(post);
   }

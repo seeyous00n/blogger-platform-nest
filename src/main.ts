@@ -5,7 +5,7 @@ import { appSetup } from './config/app.setup';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   appSetup(app);
-  await app.listen(process.env.PORT ?? 3003); //TODO process.env.PORT don't work! resolve will be in the following lessons
+  await app.listen(process.env.PORT ?? 3003);
 }
 
 bootstrap();

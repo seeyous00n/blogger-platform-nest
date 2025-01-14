@@ -5,17 +5,17 @@ import {
   ValidationPipe,
 } from '@nestjs/common';
 import { ValidationError } from '@nestjs/common';
+import { BadRequestDomainException } from '../core/exceptions/domain-exception';
 
 type ErrorResponse = { message: string; field: string };
 
-//TODO не уловил, в каком случае error.children будет не пустой??ааа
 const errorFormatter = (errors: ValidationError[]): ErrorResponse[] => {
   const response = [] as ErrorResponse[];
   errors.forEach((error: ValidationError) => {
     const errorKeys = Object.keys(error.constraints);
     errorKeys.forEach((key: string) => {
       response.push({
-        message: `${error.constraints[key]}; Current: ${error.value}`,
+        message: `${error.constraints[key]}. Value: ${error.value}`,
         field: error.property,
       });
     });
@@ -31,10 +31,8 @@ export function pipesSetup(app: INestApplication) {
       stopAtFirstError: true,
       exceptionFactory: (errors) => {
         const result = errorFormatter(errors);
-        throw new HttpException(
-          { errorsMessages: result },
-          HttpStatus.BAD_REQUEST,
-        );
+        const resultErrors = { errorsMessages: result };
+        throw new HttpException(resultErrors, HttpStatus.BAD_REQUEST);
       },
     }),
   );

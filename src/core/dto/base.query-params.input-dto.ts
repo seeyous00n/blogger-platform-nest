@@ -1,5 +1,6 @@
 import { Type } from 'class-transformer';
 import { IsEnum } from 'class-validator';
+import { MinAndDefaultValue } from '../decorators/transform/min-value';
 
 export enum SortDirection {
   Asc = 'asc',
@@ -8,9 +9,11 @@ export enum SortDirection {
 
 class PaginationParams {
   @Type(() => Number)
+  @MinAndDefaultValue(1, 1)
   pageNumber: number = 1;
 
   @Type(() => Number)
+  @MinAndDefaultValue(1, 10)
   pageSize: number = 10;
 
   @IsEnum(SortDirection)

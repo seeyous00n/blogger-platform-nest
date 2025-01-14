@@ -15,6 +15,7 @@ import { PostsQueryRepository } from '../infrastructure/query/posts.query-reposi
 import { CreatePostInputDTO } from './input-dto/create-post.input-dto';
 import { GetPostsQueryParams } from './input-dto/get-posts-query-params.input-dto';
 import { UpdatePostInputDto } from './input-dto/update-post.input-dto';
+import { NotFoundDomainException } from '../../../../core/exceptions/domain-exception';
 
 @Controller('posts')
 export class PostsController {
@@ -25,13 +26,18 @@ export class PostsController {
 
   @Get()
   async getAll(@Query() query: GetPostsQueryParams) {
-    return await this.postsQueryRepository.getAll(query);
+    return this.postsQueryRepository.getAll(query);
   }
 
   @Post()
   async create(@Body() body: CreatePostInputDTO) {
     const postId = await this.postsService.createPost(body);
-    return await this.postsQueryRepository.getByIdOrNotFoundError(postId);
+    const post = await this.postsQueryRepository.getByIdOrNotFoundError(postId);
+    if (!post) {
+      throw NotFoundDomainException.create('blog not found');
+    }
+
+    return post;
   }
 
   @Get(':id/comments')
@@ -41,7 +47,12 @@ export class PostsController {
 
   @Get(':id')
   async getOne(@Param('id') id: string) {
-    return await this.postsQueryRepository.getByIdOrNotFoundError(id);
+    const post = await this.postsQueryRepository.getByIdOrNotFoundError(id);
+    if (!post) {
+      throw NotFoundDomainException.create('blog not found');
+    }
+
+    return post;
   }
 
   @Put(':id')

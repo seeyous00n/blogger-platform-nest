@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Blog, BlogModelType } from '../../domain/blog.entity';
 import { BlogViewDto } from '../../api/view-dto/blog.view-dto';
@@ -14,14 +14,16 @@ export class BlogsQueryRepository {
   async getAll(
     query: GetBlogQueryParams,
   ): Promise<PaginationViewDto<BlogViewDto[]>> {
-    const filter: FilterQuery<Blog> = query.searchNameTerm
-      ? {
-          name: {
-            $regex: query.searchNameTerm,
-            $options: 'i',
-          },
-        }
-      : {};
+    const filter: FilterQuery<Blog> = {
+      deletionStatus: { $ne: DeletionStatus.PermanentDeleted },
+    };
+
+    if (query.searchNameTerm) {
+      filter.name = {
+        $regex: query.searchNameTerm,
+        $options: 'i',
+      };
+    }
 
     const blogs = await this.BlogModel.find(filter)
       .sort({ [query.sortBy]: query.sortDirection })
@@ -40,14 +42,14 @@ export class BlogsQueryRepository {
     });
   }
 
-  async getByIdOrNotFoundError(id: string): Promise<BlogViewDto> {
+  async getByIdOrNotFoundError(id: string): Promise<BlogViewDto | null> {
     const blog = await this.BlogModel.findOne({
       _id: id,
       deletionStatus: { $ne: DeletionStatus.PermanentDeleted },
     });
 
     if (!blog) {
-      throw new NotFoundException('blog not found');
+      return null;
     }
 
     return BlogViewDto.mapToView(blog);

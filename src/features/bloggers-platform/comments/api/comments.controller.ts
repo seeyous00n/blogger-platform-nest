@@ -18,7 +18,6 @@ export class CommentsController {
   @Get(':id')
   async getOne(@Param('id') id: string) {}
 
-  //TODO mm how to get UserId???
   @Put()
   async update(@Param('id') id: string, @Body() comment: UpdatePostInput) {}
 

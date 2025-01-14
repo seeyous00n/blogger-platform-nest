@@ -9,6 +9,17 @@ export const commentUpdateConstraints = {
   maxLength: 300,
 };
 
+@Schema({ _id: false })
+class CommentatorInfo {
+  @Prop({ type: String, required: true })
+  userId: string;
+
+  @Prop({ type: String, required: true })
+  userLogin: string;
+}
+
+const CommentatorInfoSchema = SchemaFactory.createForClass(CommentatorInfo);
+
 @Schema({ timestamps: true })
 export class Comment {
   @Prop({ type: String, required: true })
@@ -17,17 +28,8 @@ export class Comment {
   @Prop({ type: String, required: true, ...commentUpdateConstraints })
   content: string;
 
-  @Prop({
-    type: {
-      userId: { type: String, required: true },
-      userLogin: { type: String, required: true },
-    },
-    required: true,
-  })
-  commentatorInfo: {
-    userId: string;
-    userLogin: string;
-  };
+  @Prop({ type: CommentatorInfoSchema })
+  commentatorInfo: CommentatorInfo;
 
   @Prop({ type: Date })
   createdAt: Date;
