@@ -1,7 +1,13 @@
 import { INestApplication } from '@nestjs/common';
-import { globalPrefixSetup } from './global-prefix.setup';
+import { pipesSetup } from './pipes.setup';
+import * as cookieParser from 'cookie-parser';
+import { validationConstraintSetup } from './validation-constraint.setup';
+import { exceptionFilterSetup } from './exception-filter.setup';
 
 export function appSetup(app: INestApplication) {
-  // globalPrefixSetup(app);
+  pipesSetup(app);
   app.enableCors();
+  app.use(cookieParser());
+  validationConstraintSetup(app);
+  exceptionFilterSetup(app);
 }

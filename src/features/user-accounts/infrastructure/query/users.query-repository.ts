@@ -1,9 +1,8 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { DeletionStatus, User, UserModelType } from '../../domain/user.entity';
-import { UserViewDto } from '../../api/view-dto/user-view.dto';
+import { UserViewAuthDto, UserViewDto } from '../../api/view-dto/user.view-dto';
 import { InjectModel } from '@nestjs/mongoose';
-import { GetUsersQueryParams } from '../../api/input-dto/get-users-query-params-input.dto';
-import { QueryFieldsUtil } from '../../../../core/utils/queryFields.util';
+import { GetUsersQueryParams } from '../../api/input-dto/get-users-query-params.input-dto';
 import { PaginationViewDto } from '../../../../core/dto/base.paginated.view-dto';
 import { FilterQuery } from 'mongoose';
 
@@ -14,7 +13,9 @@ export class UsersQueryRepository {
   async getAll(
     query: GetUsersQueryParams,
   ): Promise<PaginationViewDto<UserViewDto[]>> {
-    const filter: FilterQuery<User> = {};
+    const filter: FilterQuery<User> = {
+      deletionStatus: { $ne: DeletionStatus.PermanentDeleted },
+    };
 
     if (query.searchLoginTerm) {
       filter.$or = filter.$or || [];
@@ -35,38 +36,48 @@ export class UsersQueryRepository {
       });
     }
 
-    const fullFilter = {
-      ...filter,
-      deletionStatus: DeletionStatus.NotDeleted,
-    };
+    const users = await this.UserModel.find(filter)
+      .sort({ [query.sortBy]: query.sortDirection })
+      .skip(query.calculateSkip())
+      .limit(query.pageSize);
 
-    const queryHelper = QueryFieldsUtil.queryPagination(query);
-
-    const users = await this.UserModel.find(fullFilter)
-      .sort(queryHelper.sort)
-      .skip(queryHelper.skip)
-      .limit(queryHelper.limit);
-
-    const totalCount = await this.UserModel.countDocuments(fullFilter);
+    const totalCount = await this.UserModel.countDocuments(filter);
 
     const items = users.map(UserViewDto.mapToView);
 
     return PaginationViewDto.mapToView({
-      pageNumber: queryHelper.pageNumber,
-      pageSize: queryHelper.pageSize,
+      pageNumber: query.pageNumber,
+      pageSize: query.pageSize,
       totalCount,
       items,
     });
   }
 
-  async getByIdOrNotFoundError(id: string): Promise<UserViewDto> {
+  async getByIdOrNotFoundError(id: string): Promise<UserViewDto | null> {
     const user = await this.UserModel.findById({
       _id: id,
       deletionStatus: DeletionStatus.NotDeleted,
     });
 
-    if (!user) throw new NotFoundException('user not found');
+    if (!user) {
+      return null;
+    }
 
     return UserViewDto.mapToView(user);
+  }
+
+  async getAuthUserByIdOrNotFoundError(
+    id: string,
+  ): Promise<UserViewAuthDto | null> {
+    const user = await this.UserModel.findById({
+      _id: id,
+      deletionStatus: DeletionStatus.NotDeleted,
+    });
+
+    if (!user) {
+      return null;
+    }
+
+    return UserViewAuthDto.mapToView(user);
   }
 }

@@ -1,0 +1,51 @@
+import { Test, TestingModuleBuilder } from '@nestjs/testing';
+import { AppModule } from '../../src/app.module';
+import { EmailService } from '../../src/features/notifications/email.service';
+import { EmailServiceMock } from '../mock/email-service.mock';
+import { appSetup } from '../../src/config/app.setup';
+import { Connection } from 'mongoose';
+import { getConnectionToken } from '@nestjs/mongoose';
+import { deleteAllData } from './delete-all-data';
+import { UserTestManager } from './user-test-manager';
+import { BlogTestManager } from './blog-test-manager';
+import { PostTestManager } from './post-test-manager';
+type ModuleBuilderType = (moduleBuilder: TestingModuleBuilder) => void;
+
+export const initSettings = async (
+  addSettingsToModuleBuilder?: ModuleBuilderType,
+) => {
+  const testingModuleBuilder: TestingModuleBuilder = Test.createTestingModule({
+    imports: [AppModule],
+  })
+    .overrideProvider(EmailService)
+    .useClass(EmailServiceMock);
+
+  if (addSettingsToModuleBuilder) {
+    addSettingsToModuleBuilder(testingModuleBuilder);
+  }
+
+  const testingAppModule = await testingModuleBuilder.compile();
+  const app = testingAppModule.createNestApplication();
+
+  appSetup(app);
+
+  const userTestManager = new UserTestManager(app);
+  const blogTestManager = new BlogTestManager(app);
+  const postTestManager = new PostTestManager(app);
+
+  await app.init();
+
+  const dbConnection = app.get<Connection>(getConnectionToken());
+  const httpServer = app.getHttpServer();
+
+  await deleteAllData(app);
+
+  return {
+    app,
+    dbConnection,
+    httpServer,
+    userTestManager,
+    blogTestManager,
+    postTestManager,
+  };
+};
