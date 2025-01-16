@@ -25,17 +25,8 @@ import { EmailInputDto } from './input-dto/email.input-dto';
 import { NewPasswordInputDto } from './input-dto/new-password.input-dto';
 import { CreateUserInputDto } from './input-dto/create-user.input-dto';
 import { NotFoundDomainException } from '../../../core/exceptions/domain-exception';
-
-const TOKENS_NAME = {
-  REFRESH_TOKEN: 'refreshToken',
-  ACCESS_TOKEN: 'accessToken',
-};
-
-const cookiesData = {
-  httpOnly: true,
-  secure: true,
-  maxAge: 1000 * 60 * 60 * 24,
-};
+import { tokensName } from '../types/types';
+import { getCookiesData } from '../../../core/adapters/getCookiesData';
 
 @Controller('auth')
 export class AuthController {
@@ -62,12 +53,12 @@ export class AuthController {
     const authData = await this.authService.login(data);
 
     response.cookie(
-      TOKENS_NAME.REFRESH_TOKEN,
+      tokensName.refreshToken,
       authData.refreshToken,
-      cookiesData,
+      getCookiesData(),
     );
 
-    return { [TOKENS_NAME.ACCESS_TOKEN]: authData.accessToken };
+    return { [tokensName.accessToken]: authData.accessToken };
   }
 
   @UseGuards(JwtAuthGuard)
