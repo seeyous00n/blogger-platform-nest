@@ -14,16 +14,7 @@ import {
   BadRequestDomainException,
   UnauthorizedDomainException,
 } from '../../../core/exceptions/domain-exception';
-
-type PayloadType = {
-  deviceId: string;
-  userId: string;
-};
-
-type IatAndExpRefreshTokenType = {
-  iat: number;
-  exp: number;
-};
+import { IatAndExpRefreshTokenType, PayloadType } from '../types/types';
 
 @Injectable()
 export class AuthService {
