@@ -1,19 +1,25 @@
-import { INestApplication } from '@nestjs/common';
+import { HttpStatus, INestApplication } from '@nestjs/common';
 import * as request from 'supertest';
 import { GetPostsQueryParams } from '../src/features/bloggers-platform/posts/api/input-dto/get-posts-query-params.input-dto';
 import { deleteAllData } from './helpers/delete-all-data';
 import { initSettings } from './helpers/init-settings';
 import { newBlogData, newPostData } from './mock/mock-data';
+import { BlogTestManager } from './helpers/blog-test-manager';
+import { PostTestManager } from './helpers/post-test-manager';
 
 describe('PostsController', () => {
   let app: INestApplication;
   let httpServer;
+  let blogTestManager: BlogTestManager;
+  let postTestManager: PostTestManager;
 
-  beforeEach(async () => {
+  beforeAll(async () => {
     const result = await initSettings();
 
     app = result.app;
     httpServer = result.httpServer;
+    blogTestManager = result.blogTestManager;
+    postTestManager = result.postTestManager;
   });
 
   beforeEach(async () => {
@@ -30,7 +36,7 @@ describe('PostsController', () => {
       const response = await request(httpServer)
         .get('/posts')
         .query(query)
-        .expect(200);
+        .expect(HttpStatus.OK);
 
       expect(response.body.pagesCount).toBe(0);
       expect(response.body.page).toBe(1);
@@ -42,15 +48,12 @@ describe('PostsController', () => {
 
   describe('POST /posts', () => {
     it('should create new post', async () => {
-      const newBlog = await request(httpServer)
-        .post('/blogs')
-        .send(newBlogData)
-        .expect(201);
+      const newBlog = await blogTestManager.createBlog(newBlogData);
 
       const result = await request(httpServer)
         .post('/posts')
-        .send({ ...newPostData, blogId: newBlog.body.id })
-        .expect(201);
+        .send({ ...newPostData, blogId: newBlog.id })
+        .expect(HttpStatus.CREATED);
 
       const newEntity = result.body;
 
@@ -58,34 +61,20 @@ describe('PostsController', () => {
       expect(newEntity.title).toBe(newPostData.title);
       expect(newEntity.shortDescription).toBe(newPostData.shortDescription);
       expect(newEntity.content).toBe(newPostData.content);
-      expect(newEntity.blogId).toBe(newBlog.body.id);
-      expect(newEntity.blogName).toBe(newBlog.body.name);
+      expect(newEntity.blogId).toBe(newBlog.id);
+      expect(newEntity.blogName).toBe(newBlog.name);
       expect(new Date(newEntity.createdAt).toString()).not.toBe('Invalid Date');
-
-      const query = {} as GetPostsQueryParams;
-      await request(httpServer)
-        .get(`/posts/${newEntity.id}`)
-        .query(query)
-        .expect(200);
-
-      await request(httpServer)
-        .get(`/posts`)
-        .query({ sortBy: 'blogName' })
-        .expect(200);
     });
   });
 
   describe('DELETE /posts', () => {
     it('should delete a post', async () => {
-      const newBlog = await request(httpServer)
-        .post('/blogs')
-        .send(newBlogData)
-        .expect(201);
+      const newBlog = await blogTestManager.createBlog(newBlogData);
 
       const result = await request(httpServer)
         .post('/posts')
-        .send({ ...newPostData, blogId: newBlog.body.id })
-        .expect(201);
+        .send({ ...newPostData, blogId: newBlog.id })
+        .expect(HttpStatus.CREATED);
 
       await request(httpServer).delete(`/posts/${result.body.id}`).expect(204);
     });

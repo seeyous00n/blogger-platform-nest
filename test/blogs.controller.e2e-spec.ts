@@ -1,6 +1,6 @@
 import { GetBlogQueryParams } from '../src/features/bloggers-platform/blogs/api/input-dto/get-blogs-query-params.input-dto';
 import * as request from 'supertest';
-import { INestApplication } from '@nestjs/common';
+import { HttpStatus, INestApplication } from '@nestjs/common';
 import { deleteAllData } from './helpers/delete-all-data';
 import { initSettings } from './helpers/init-settings';
 import { newBlogData, newPostData } from './mock/mock-data';
@@ -11,7 +11,7 @@ describe('BlogsController', () => {
   let httpServer;
   let blogTestManager: BlogTestManager;
 
-  beforeEach(async () => {
+  beforeAll(async () => {
     const result = await initSettings();
 
     app = result.app;
@@ -33,7 +33,7 @@ describe('BlogsController', () => {
 
       const response = await request(httpServer).get('/blogs').query(query);
 
-      expect(response.status).toBe(200);
+      expect(response.status).toBe(HttpStatus.OK);
       expect(response.body.pagesCount).toBe(0);
       expect(response.body.page).toBe(1);
       expect(response.body.pageSize).toBe(10);
@@ -44,13 +44,16 @@ describe('BlogsController', () => {
     it('should return blogs (5) with pagination (page and pageSize)', async () => {
       await blogTestManager.createSeveralBlogs(5);
       const query = { pageNumber: 2, pageSize: 4 } as GetBlogQueryParams;
-      const blogsWithPagination = await blogTestManager.getBlogs(query);
+      const blogsWithPagination = await request(app.getHttpServer())
+        .get('/blogs')
+        .query(query)
+        .expect(HttpStatus.OK);
 
-      expect(blogsWithPagination.pagesCount).toBe(2);
-      expect(blogsWithPagination.page).toBe(2);
-      expect(blogsWithPagination.pageSize).toBe(4);
-      expect(blogsWithPagination.totalCount).toBe(5);
-      expect(blogsWithPagination.items.length).toBe(1);
+      expect(blogsWithPagination.body.pagesCount).toBe(2);
+      expect(blogsWithPagination.body.page).toBe(2);
+      expect(blogsWithPagination.body.pageSize).toBe(4);
+      expect(blogsWithPagination.body.totalCount).toBe(5);
+      expect(blogsWithPagination.body.items.length).toBe(1);
     });
   });
 
@@ -59,7 +62,7 @@ describe('BlogsController', () => {
       const result = await request(httpServer)
         .post('/blogs')
         .send(newBlogData)
-        .expect(201);
+        .expect(HttpStatus.CREATED);
 
       const newEntity = result.body;
 
@@ -72,14 +75,13 @@ describe('BlogsController', () => {
 
       const query = {} as GetBlogQueryParams;
       const blogsWithPagination = await blogTestManager.getBlogs(query);
+      const blogsItem = blogsWithPagination.items[0];
 
       expect(blogsWithPagination.pagesCount).toBe(1);
       expect(blogsWithPagination.page).toBe(1);
       expect(blogsWithPagination.pageSize).toBe(10);
       expect(blogsWithPagination.totalCount).toBe(1);
       expect(blogsWithPagination.items.length).toBe(1);
-
-      const blogsItem = blogsWithPagination.items[0];
 
       expect(typeof blogsItem.id).toBe('string');
       expect(blogsItem.name).toBe(newBlogData.name);
@@ -94,7 +96,9 @@ describe('BlogsController', () => {
     it('should delete blog', async () => {
       const blog = await blogTestManager.createBlog(newBlogData);
 
-      await request(httpServer).delete(`/blogs/${blog.id}`).expect(204);
+      await request(httpServer)
+        .delete(`/blogs/${blog.id}`)
+        .expect(HttpStatus.NO_CONTENT);
     });
   });
 
@@ -104,7 +108,7 @@ describe('BlogsController', () => {
       const post = await request(httpServer)
         .post(`/blogs/${blog.id}/posts`)
         .send(newPostData)
-        .expect(201);
+        .expect(HttpStatus.CREATED);
 
       const postItem = post.body;
 

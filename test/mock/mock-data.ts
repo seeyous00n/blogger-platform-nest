@@ -1,7 +1,7 @@
 export const newUserData = {
   login: 'userlogin',
   password: 'userpassword',
-  email: 'email1@example.com',
+  email: 'email@example.com',
 };
 
 export const newBlogData = {

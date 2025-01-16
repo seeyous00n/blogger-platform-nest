@@ -1,10 +1,11 @@
 import { HttpStatus, INestApplication } from '@nestjs/common';
 import { CreateUserInputDto } from '../../src/features/user-accounts/api/input-dto/create-user.input-dto';
 import * as request from 'supertest';
-import { authBasicData } from '../mock/mock-data';
+import { authBasicData, newUserData } from '../mock/mock-data';
 import { UserViewDto } from '../../src/features/user-accounts/api/view-dto/user.view-dto';
 import { PaginationViewDto } from '../../src/core/dto/base.paginated.view-dto';
 import { GetUsersQueryParams } from '../../src/features/user-accounts/api/input-dto/get-users-query-params.input-dto';
+import { LoginUserInputDto } from '../../src/features/user-accounts/api/input-dto/login-user.input-dto';
 
 export class UserTestManager {
   constructor(private app: INestApplication) {}
@@ -59,5 +60,30 @@ export class UserTestManager {
     }
 
     return await Promise.all(users);
+  }
+
+  async loginUser(
+    model: LoginUserInputDto,
+    statusCode: number = HttpStatus.OK,
+  ): Promise<string> {
+    const result = await request(this.app.getHttpServer())
+      .post('/auth/login')
+      .send({
+        loginOrEmail: model.loginOrEmail,
+        password: model.password,
+      })
+      .expect(statusCode);
+
+    return result.body.accessToken;
+  }
+
+  async registrationUser(
+    model: CreateUserInputDto,
+    statusCode: number = HttpStatus.NO_CONTENT,
+  ): Promise<void> {
+    await request(this.app.getHttpServer())
+      .post('/auth/registration')
+      .send(model)
+      .expect(statusCode);
   }
 }
