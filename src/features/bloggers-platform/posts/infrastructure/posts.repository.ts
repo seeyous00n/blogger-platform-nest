@@ -22,7 +22,7 @@ export class PostsRepository {
   async findOneOrNotFoundError(id: string): Promise<PostDocument> {
     const post = await this.findById(id);
 
-    if (!post) throw NotFoundDomainException.create('post not found');
+    if (!post) throw NotFoundDomainException.create();
 
     return post;
   }

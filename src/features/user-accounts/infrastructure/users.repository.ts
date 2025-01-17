@@ -26,7 +26,7 @@ export class UsersRepository {
 
   async findOneOrNotFoundError(id: string): Promise<UserDocument> {
     const user = await this.findById(id);
-    if (!user) throw NotFoundDomainException.create('user not found');
+    if (!user) throw NotFoundDomainException.create();
 
     return user;
   }

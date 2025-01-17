@@ -20,6 +20,7 @@ import { PostsQueryRepository } from '../../posts/infrastructure/query/posts.que
 import { GetPostsQueryParams } from '../../posts/api/input-dto/get-posts-query-params.input-dto';
 import { CreatePostByBlogInputDTO } from '../../posts/api/input-dto/create-post.input-dto';
 import { NotFoundDomainException } from '../../../../core/exceptions/domain-exception';
+import { ObjectIdValidationPipe } from '../../../../core/pipes/object-id-validation-pipe.service';
 
 @Controller('blogs')
 export class BlogsController {
@@ -41,7 +42,7 @@ export class BlogsController {
     const blog = await this.blogsQueryRepository.getByIdOrNotFoundError(blogId);
 
     if (!blog) {
-      throw NotFoundDomainException.create('blog not found');
+      throw NotFoundDomainException.create();
     }
 
     return blog;
@@ -50,7 +51,7 @@ export class BlogsController {
   @Get(':id/posts')
   async getPostsByBlogId(
     @Query() query: GetPostsQueryParams,
-    @Param('id') id: string,
+    @Param('id', new ObjectIdValidationPipe()) id: string,
   ) {
     const blogId = await this.blogsService.getBlogId(id);
     return this.postsQueryRepository.getAll(query, blogId);
@@ -58,7 +59,7 @@ export class BlogsController {
 
   @Post(':id/posts')
   async createPostByBlogId(
-    @Param('id') id: string,
+    @Param('id', new ObjectIdValidationPipe()) id: string,
     @Body() body: CreatePostByBlogInputDTO,
   ) {
     const postId = await this.postsService.createPost({ ...body, blogId: id });
@@ -66,17 +67,17 @@ export class BlogsController {
       await this.postsQueryRepository.getByIdOrNotFoundError(postId);
 
     if (!result) {
-      throw NotFoundDomainException.create('blog not found');
+      throw NotFoundDomainException.create();
     }
 
     return result;
   }
 
   @Get(':id')
-  async getOne(@Param('id') id: string) {
+  async getOne(@Param('id', new ObjectIdValidationPipe()) id: string) {
     const blog = await this.blogsQueryRepository.getByIdOrNotFoundError(id);
     if (!blog) {
-      throw NotFoundDomainException.create('blog not found');
+      throw NotFoundDomainException.create();
     }
 
     return blog;
@@ -84,13 +85,16 @@ export class BlogsController {
 
   @Put(':id')
   @HttpCode(HttpStatus.NO_CONTENT)
-  async update(@Param('id') id: string, @Body() dto: UpdateBlogInputDto) {
+  async update(
+    @Param('id', new ObjectIdValidationPipe()) id: string,
+    @Body() dto: UpdateBlogInputDto,
+  ) {
     await this.blogsService.updateBlog(id, dto);
   }
 
   @Delete(':id')
   @HttpCode(HttpStatus.NO_CONTENT)
-  async delete(@Param('id') id: string) {
+  async delete(@Param('id', new ObjectIdValidationPipe()) id: string) {
     await this.blogsService.deleteBlog(id);
   }
 }

@@ -67,7 +67,7 @@ export class AuthController {
     const user =
       this.usersQueryRepository.getAuthUserByIdOrNotFoundError(userId);
     if (!user) {
-      throw NotFoundDomainException.create('user not found');
+      throw NotFoundDomainException.create();
     }
 
     return user;

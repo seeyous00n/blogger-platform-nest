@@ -16,6 +16,7 @@ import { CreatePostInputDTO } from './input-dto/create-post.input-dto';
 import { GetPostsQueryParams } from './input-dto/get-posts-query-params.input-dto';
 import { UpdatePostInputDto } from './input-dto/update-post.input-dto';
 import { NotFoundDomainException } from '../../../../core/exceptions/domain-exception';
+import { ObjectIdValidationPipe } from '../../../../core/pipes/object-id-validation-pipe.service';
 
 @Controller('posts')
 export class PostsController {
@@ -34,7 +35,7 @@ export class PostsController {
     const postId = await this.postsService.createPost(body);
     const post = await this.postsQueryRepository.getByIdOrNotFoundError(postId);
     if (!post) {
-      throw NotFoundDomainException.create('blog not found');
+      throw NotFoundDomainException.create();
     }
 
     return post;
@@ -46,10 +47,10 @@ export class PostsController {
   }
 
   @Get(':id')
-  async getOne(@Param('id') id: string) {
+  async getOne(@Param('id', new ObjectIdValidationPipe()) id: string) {
     const post = await this.postsQueryRepository.getByIdOrNotFoundError(id);
     if (!post) {
-      throw NotFoundDomainException.create('blog not found');
+      throw NotFoundDomainException.create();
     }
 
     return post;
@@ -57,13 +58,16 @@ export class PostsController {
 
   @Put(':id')
   @HttpCode(HttpStatus.NO_CONTENT)
-  async update(@Param('id') id: string, @Body() dto: UpdatePostInputDto) {
+  async update(
+    @Param('id', new ObjectIdValidationPipe()) id: string,
+    @Body() dto: UpdatePostInputDto,
+  ) {
     await this.postsService.updatePost(id, dto);
   }
 
   @Delete(':id')
   @HttpCode(HttpStatus.NO_CONTENT)
-  async delete(@Param('id') id: string) {
+  async delete(@Param('id', new ObjectIdValidationPipe()) id: string) {
     await this.postsService.deletePost(id);
   }
 }
