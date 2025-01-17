@@ -16,6 +16,7 @@ export class JwtAuthGuard implements CanActivate {
     private jwtService: JwtService,
     private configService: ConfigService,
   ) {}
+
   async canActivate(context: ExecutionContext) {
     const request = context.switchToHttp().getRequest();
     const token = this.extractTokenFromHeader(request);
