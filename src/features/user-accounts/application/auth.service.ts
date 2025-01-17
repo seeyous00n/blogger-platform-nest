@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { UsersRepository } from '../infrastructure/users.repository';
 import { LoginUserInputDto } from '../api/input-dto/login-user.input-dto';
-import { createUuid } from '../../../core/adapters/createUuid.utils';
+import { createUuid } from '../../../core/utils/createUuid.utils';
 import { CreateTokensInputDto } from '../dto/create-tokens.input-dto';
 import { JwtService } from '@nestjs/jwt';
 import { AuthRepository } from '../infrastructure/auth.repository';
@@ -183,7 +183,7 @@ export class AuthService {
     //     expiresIn: this.configService.get('JWT_ACCESS_TOKEN_EXPIRES'),
     //   },
     // );
-
+    //TODO move jwtService to adapter??
     const accessToken = this.jwtService.sign({
       userId: payload.userId,
     });

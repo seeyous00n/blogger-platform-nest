@@ -26,7 +26,7 @@ import { NewPasswordInputDto } from './input-dto/new-password.input-dto';
 import { CreateUserInputDto } from './input-dto/create-user.input-dto';
 import { NotFoundDomainException } from '../../../core/exceptions/domain-exception';
 import { tokensName } from '../types/types';
-import { getCookiesData } from '../../../core/adapters/getCookiesData';
+import { getCookiesDataUtils } from '../../../core/utils/getCookiesData.utils';
 
 @Controller('auth')
 export class AuthController {
@@ -55,7 +55,7 @@ export class AuthController {
     response.cookie(
       tokensName.refreshToken,
       authData.refreshToken,
-      getCookiesData(),
+      getCookiesDataUtils(),
     );
 
     return { [tokensName.accessToken]: authData.accessToken };
