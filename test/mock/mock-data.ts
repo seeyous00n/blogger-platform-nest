@@ -1,3 +1,5 @@
+export const authBasicData = { login: 'admin', password: 'qwerty' };
+
 export const newUserData = {
   login: 'userlogin',
   password: 'userpassword',
@@ -16,4 +18,10 @@ export const newPostData = {
   content: 'content',
 };
 
-export const authBasicData = { login: 'admin', password: 'qwerty' };
+export const newCommentData = {
+  content: 'comment content comment content comment content',
+};
+
+export const updateCommentData = {
+  content: 'update comment update content update comment update content',
+};

@@ -9,6 +9,7 @@ import {
   Post,
   Put,
   Query,
+  UseGuards,
 } from '@nestjs/common';
 import { CreateBlogInputDto } from './input-dto/create-blog.input-dto';
 import { GetBlogQueryParams } from './input-dto/get-blogs-query-params.input-dto';
@@ -21,6 +22,9 @@ import { GetPostsQueryParams } from '../../posts/api/input-dto/get-posts-query-p
 import { CreatePostByBlogInputDTO } from '../../posts/api/input-dto/create-post.input-dto';
 import { NotFoundDomainException } from '../../../../core/exceptions/domain-exception';
 import { ObjectIdValidationPipe } from '../../../../core/pipes/object-id-validation-pipe.service';
+import { JwtOptionalAuthGuard } from '../../../user-accounts/guards/jwt-optional-auth.guard';
+import { userIdFromParam } from '../../../../core/decorators/userId-from-request.param.decorator';
+import { BasicAuthGuard } from '../../../user-accounts/guards/basic-auth.guard';
 
 @Controller('blogs')
 export class BlogsController {
@@ -36,10 +40,11 @@ export class BlogsController {
     return this.blogsQueryRepository.getAll(query);
   }
 
+  @UseGuards(BasicAuthGuard)
   @Post()
   async create(@Body() body: CreateBlogInputDto) {
     const blogId = await this.blogsService.createBlog(body);
-    const blog = await this.blogsQueryRepository.getByIdOrNotFoundError(blogId);
+    const blog = await this.blogsQueryRepository.getById(blogId);
 
     if (!blog) {
       throw NotFoundDomainException.create();
@@ -49,22 +54,24 @@ export class BlogsController {
   }
 
   @Get(':id/posts')
+  @UseGuards(JwtOptionalAuthGuard)
   async getPostsByBlogId(
     @Query() query: GetPostsQueryParams,
     @Param('id', new ObjectIdValidationPipe()) id: string,
+    @userIdFromParam() userId: string | null,
   ) {
     const blogId = await this.blogsService.getBlogId(id);
-    return this.postsQueryRepository.getAll(query, blogId);
+    return this.postsQueryRepository.getAll(query, userId, blogId);
   }
 
+  @UseGuards(BasicAuthGuard)
   @Post(':id/posts')
   async createPostByBlogId(
     @Param('id', new ObjectIdValidationPipe()) id: string,
     @Body() body: CreatePostByBlogInputDTO,
   ) {
     const postId = await this.postsService.createPost({ ...body, blogId: id });
-    const result =
-      await this.postsQueryRepository.getByIdOrNotFoundError(postId);
+    const result = await this.postsQueryRepository.getById(postId);
 
     if (!result) {
       throw NotFoundDomainException.create();
@@ -75,7 +82,7 @@ export class BlogsController {
 
   @Get(':id')
   async getOne(@Param('id', new ObjectIdValidationPipe()) id: string) {
-    const blog = await this.blogsQueryRepository.getByIdOrNotFoundError(id);
+    const blog = await this.blogsQueryRepository.getById(id);
     if (!blog) {
       throw NotFoundDomainException.create();
     }
@@ -83,6 +90,7 @@ export class BlogsController {
     return blog;
   }
 
+  @UseGuards(BasicAuthGuard)
   @Put(':id')
   @HttpCode(HttpStatus.NO_CONTENT)
   async update(
@@ -92,6 +100,7 @@ export class BlogsController {
     await this.blogsService.updateBlog(id, dto);
   }
 
+  @UseGuards(BasicAuthGuard)
   @Delete(':id')
   @HttpCode(HttpStatus.NO_CONTENT)
   async delete(@Param('id', new ObjectIdValidationPipe()) id: string) {

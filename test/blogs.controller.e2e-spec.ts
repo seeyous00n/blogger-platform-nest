@@ -3,7 +3,7 @@ import * as request from 'supertest';
 import { HttpStatus, INestApplication } from '@nestjs/common';
 import { deleteAllData } from './helpers/delete-all-data';
 import { initSettings } from './helpers/init-settings';
-import { newBlogData, newPostData } from './mock/mock-data';
+import { authBasicData, newBlogData, newPostData } from './mock/mock-data';
 import { BlogTestManager } from './helpers/blog-test-manager';
 
 describe('BlogsController', () => {
@@ -61,6 +61,7 @@ describe('BlogsController', () => {
     it('should create new blog', async () => {
       const result = await request(httpServer)
         .post('/blogs')
+        .auth(authBasicData.login, authBasicData.password)
         .send(newBlogData)
         .expect(HttpStatus.CREATED);
 
@@ -98,6 +99,7 @@ describe('BlogsController', () => {
 
       await request(httpServer)
         .delete(`/blogs/${blog.id}`)
+        .auth(authBasicData.login, authBasicData.password)
         .expect(HttpStatus.NO_CONTENT);
     });
   });
@@ -107,6 +109,7 @@ describe('BlogsController', () => {
       const blog = await blogTestManager.createBlog(newBlogData);
       const post = await request(httpServer)
         .post(`/blogs/${blog.id}/posts`)
+        .auth(authBasicData.login, authBasicData.password)
         .send(newPostData)
         .expect(HttpStatus.CREATED);
 

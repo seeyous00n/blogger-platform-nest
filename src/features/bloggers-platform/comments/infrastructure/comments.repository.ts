@@ -32,4 +32,14 @@ export class CommentsRepository {
 
     return comment;
   }
+
+  async findByIdAndUserId(
+    id: string,
+    userId: string,
+  ): Promise<CommentDocument> {
+    return this.CommentModel.findOne({
+      _id: id,
+      'commentatorInfo.userId': userId,
+    });
+  }
 }

@@ -13,7 +13,7 @@ export class ObjectIdValidationPipe implements PipeTransform {
     if (!isValidObjectId(value)) {
       throw new HttpException(
         `ObjectId must be an ObjectId (${value}) `,
-        HttpStatus.BAD_REQUEST,
+        HttpStatus.NOT_FOUND,
       );
     }
 

@@ -42,7 +42,7 @@ export class BlogsQueryRepository {
     });
   }
 
-  async getByIdOrNotFoundError(id: string): Promise<BlogViewDto | null> {
+  async getById(id: string): Promise<BlogViewDto | null> {
     const blog = await this.BlogModel.findOne({
       _id: id,
       deletionStatus: { $ne: DeletionStatus.PermanentDeleted },

@@ -9,6 +9,7 @@ import { deleteAllData } from './delete-all-data';
 import { UserTestManager } from './user-test-manager';
 import { BlogTestManager } from './blog-test-manager';
 import { PostTestManager } from './post-test-manager';
+import { CommentTestManager } from './comment-test-manager';
 type ModuleBuilderType = (moduleBuilder: TestingModuleBuilder) => void;
 
 export const initSettings = async (
@@ -32,6 +33,7 @@ export const initSettings = async (
   const userTestManager = new UserTestManager(app);
   const blogTestManager = new BlogTestManager(app);
   const postTestManager = new PostTestManager(app);
+  const commentTestManager = new CommentTestManager(app);
 
   await app.init();
 
@@ -47,5 +49,6 @@ export const initSettings = async (
     userTestManager,
     blogTestManager,
     postTestManager,
+    commentTestManager,
   };
 };

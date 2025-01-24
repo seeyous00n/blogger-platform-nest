@@ -5,7 +5,6 @@ import { PostViewDto } from '../../src/features/bloggers-platform/posts/api/view
 import { authBasicData } from '../mock/mock-data';
 import { UpdatePostInputDto } from '../../src/features/bloggers-platform/posts/api/input-dto/update-post.input-dto';
 import { GetPostsQueryParams } from '../../src/features/bloggers-platform/posts/api/input-dto/get-posts-query-params.input-dto';
-import { Promise } from 'mongoose';
 
 export class PostTestManager {
   constructor(private app: INestApplication) {}

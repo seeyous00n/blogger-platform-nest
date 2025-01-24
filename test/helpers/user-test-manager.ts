@@ -1,7 +1,7 @@
 import { HttpStatus, INestApplication } from '@nestjs/common';
 import { CreateUserInputDto } from '../../src/features/user-accounts/api/input-dto/create-user.input-dto';
 import * as request from 'supertest';
-import { authBasicData, newUserData } from '../mock/mock-data';
+import { authBasicData } from '../mock/mock-data';
 import { UserViewDto } from '../../src/features/user-accounts/api/view-dto/user.view-dto';
 import { PaginationViewDto } from '../../src/core/dto/base.paginated.view-dto';
 import { GetUsersQueryParams } from '../../src/features/user-accounts/api/input-dto/get-users-query-params.input-dto';

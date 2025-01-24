@@ -13,6 +13,10 @@ import {
   Session,
   SessionModelType,
 } from '../user-accounts/domain/session.entity';
+import {
+  Like,
+  LikeModelType,
+} from '../bloggers-platform/likes/domain/like.entity';
 
 @Controller('testing')
 export class TestingController {
@@ -21,6 +25,7 @@ export class TestingController {
     @InjectModel(Blog.name) private BlogModel: BlogModelType,
     @InjectModel(Post.name) private PostModel: PostModelType,
     @InjectModel(Session.name) private SessionModel: SessionModelType,
+    @InjectModel(Like.name) private LikeModel: LikeModelType,
   ) {}
 
   @Delete('all-data')
@@ -30,5 +35,6 @@ export class TestingController {
     await this.BlogModel.deleteMany();
     await this.PostModel.deleteMany();
     await this.SessionModel.deleteMany();
+    await this.LikeModel.deleteMany();
   }
 }

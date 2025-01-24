@@ -37,7 +37,7 @@ export class UsersController {
     const userId = await this.usersService.createUser(body);
     await this.usersService.updateIsConfirmed(userId);
 
-    const user = await this.usersQueryRepository.getByIdOrNotFoundError(userId);
+    const user = await this.usersQueryRepository.getById(userId);
     if (!user) {
       throw NotFoundDomainException.create();
     }

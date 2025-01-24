@@ -1,18 +1,39 @@
-import { PostDocument } from '../../domain/post.entity';
-import { MyStatus } from '../../../../../core/types/enums';
+import { ObjectId } from 'mongoose';
+import { DeletionStatus } from '../../../../../core/types/enums';
 
-export type NewestLikes = {
+export class PostLeanDto {
+  _id: ObjectId;
+  deletionStatus: DeletionStatus;
+  title: string;
+  shortDescription: string;
+  content: string;
+  blogId: string;
+  blogName: string;
+  createdAt: Date;
+}
+
+export class NewestLikes {
   addedAt: Date;
   userId: string;
   login: string;
-};
-
-export type ExtendedLikesInfo = {
+}
+export class ExtendedLikesInfo {
   likesCount: number;
   dislikesCount: number;
-  myStatus: MyStatus;
+  myStatus: string;
   newestLikes: NewestLikes[];
-};
+}
+
+export class PostViewForMapType {
+  title: string;
+  shortDescription: string;
+  content: string;
+  blogId: string;
+  blogName: string;
+  createdAt: Date;
+  _id: ObjectId;
+  extendedLikesInfo: ExtendedLikesInfo;
+}
 
 export class PostViewDto {
   id: string;
@@ -24,27 +45,16 @@ export class PostViewDto {
   createdAt: Date;
   extendedLikesInfo: ExtendedLikesInfo;
 
-  static mapToView(post: PostDocument): PostViewDto {
+  static mapToView(post: PostViewForMapType): PostViewDto {
     const dto = new PostViewDto();
-    dto.id = post.id.toString();
+    dto.id = post._id.toString();
     dto.title = post.title;
     dto.shortDescription = post.shortDescription;
     dto.content = post.content;
     dto.blogId = post.blogId;
     dto.blogName = post.blogName;
     dto.createdAt = post.createdAt;
-    dto.extendedLikesInfo = {
-      likesCount: 0,
-      dislikesCount: 0,
-      myStatus: MyStatus.None,
-      newestLikes: [
-        {
-          addedAt: post.createdAt,
-          userId: 'string',
-          login: 'string',
-        },
-      ],
-    };
+    dto.extendedLikesInfo = post.extendedLikesInfo;
 
     return dto;
   }

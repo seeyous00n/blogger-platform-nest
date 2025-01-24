@@ -10,7 +10,6 @@ describe('UsersController', () => {
   let app: INestApplication;
   let httpServer;
   let userTestManager: UserTestManager;
-  const asd = 0;
 
   beforeAll(async () => {
     const result = await initSettings();
@@ -104,7 +103,7 @@ describe('UsersController', () => {
       await request(httpServer)
         .delete(`/users/312`)
         .auth(authBasicData.login, authBasicData.password)
-        .expect(HttpStatus.BAD_REQUEST);
+        .expect(HttpStatus.NOT_FOUND);
     });
   });
 });

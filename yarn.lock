@@ -819,6 +819,11 @@
     path-to-regexp "3.3.0"
     tslib "2.8.1"
 
+"@nestjs/cqrs@^11.0.0":
+  version "11.0.0"
+  resolved "https://registry.yarnpkg.com/@nestjs/cqrs/-/cqrs-11.0.0.tgz#daf2539520476a33b7e916b8b10b91a0bb3eda8e"
+  integrity sha512-AD4WblJaXVm9n6x1Dy9S/eltqM64U8JqJLgouxyB60cbM+bgWbljKJIS9YLr72V5FhiM6A/IrfbV0YCxsQykpA==
+
 "@nestjs/jwt@^10.2.0":
   version "10.2.0"
   resolved "https://registry.yarnpkg.com/@nestjs/jwt/-/jwt-10.2.0.tgz#6aa35a04922d19c6426efced4671620f92e6dbd0"
