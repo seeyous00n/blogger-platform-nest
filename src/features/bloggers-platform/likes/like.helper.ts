@@ -25,31 +25,40 @@ const MAX_LIMIT = 3;
 export class LikeHelper {
   constructor(@InjectModel(Like.name) private LikeModel: LikeModelType) {}
 
+  private setLikeInfo(like: Like, likeInfo: LikeInfo, authorId: string) {
+    if (like.status === LIKE) {
+      likeInfo.likesCount = likeInfo.likesCount + 1;
+    }
+
+    if (like.status === DISLIKE) {
+      likeInfo.dislikesCount = likeInfo.dislikesCount + 1;
+    }
+
+    if (like.authorId === authorId) {
+      likeInfo.myStatus = like.status;
+    }
+  }
+
   private getLikesInfoWithoutNewest(
     index: string,
     likes: Like[],
     authorId: string | undefined,
   ): LikeInfo {
-    return likes.reduce<LikeInfo>(
-      (accum: LikeInfo, currentValue: Like): LikeInfo => {
-        if (index === currentValue.parentId) {
-          if (currentValue.status === LIKE) {
-            accum.likesCount += 1;
-          }
+    const likesMap = new Map<string, LikeInfo>();
 
-          if (currentValue.status === DISLIKE) {
-            accum.dislikesCount += 1;
-          }
+    likesMap.set(index, {
+      likesCount: 0,
+      dislikesCount: 0,
+      myStatus: DEFAULT_MY_STATUS,
+    });
 
-          if (currentValue.authorId === authorId) {
-            accum.myStatus = currentValue.status;
-          }
-        }
+    const likeInfo = likesMap.get(index);
 
-        return accum;
-      },
-      { likesCount: 0, dislikesCount: 0, myStatus: DEFAULT_MY_STATUS },
-    );
+    for (const like of likes) {
+      this.setLikeInfo(like, likeInfo, authorId);
+    }
+
+    return likeInfo;
   }
 
   async getCommentWithLike(
@@ -72,37 +81,23 @@ export class LikeHelper {
     likes: Like[],
     authorId: string | undefined,
   ): LikesObjectStructType {
-    return likes.reduce<LikesObjectStructType>(
-      (accum: LikesObjectStructType, currentValue): LikesObjectStructType => {
-        if (`${currentValue.parentId}` in accum) {
-          if (currentValue.status === LIKE) {
-            accum[`${currentValue.parentId}`].likesCount += 1;
-          }
+    const likesMap = new Map<string, LikeInfo>();
 
-          if (currentValue.status === DISLIKE) {
-            accum[`${currentValue.parentId}`].dislikesCount += 1;
-          }
+    for (const like of likes) {
+      if (!likesMap.has(like.parentId)) {
+        likesMap.set(like.parentId, {
+          likesCount: 0,
+          dislikesCount: 0,
+          myStatus: DEFAULT_MY_STATUS,
+        });
+      }
 
-          if (currentValue.authorId === authorId) {
-            accum[`${currentValue.parentId}`].myStatus = currentValue.status;
-          }
+      const likeInfo = likesMap.get(like.parentId);
 
-          return accum;
-        }
+      this.setLikeInfo(like, likeInfo, authorId);
+    }
 
-        accum[`${currentValue.parentId}`] = {
-          likesCount: currentValue.status === LIKE ? 1 : 0,
-          dislikesCount: currentValue.status === DISLIKE ? 1 : 0,
-          myStatus:
-            currentValue.authorId === authorId
-              ? currentValue.status
-              : DEFAULT_MY_STATUS,
-        };
-
-        return accum;
-      },
-      {} as LikesObjectStructType,
-    );
+    return Object.fromEntries(likesMap);
   }
 
   async getCommentsWithLikes(
@@ -201,69 +196,44 @@ export class LikeHelper {
     likes: Like[],
     authorId: string | undefined,
   ): LikesObjectWithNewestStructType {
-    //TODO для создания объектов такой структуры нужно использовать Map!!
-    return likes.reduce<LikesObjectWithNewestStructType>(
-      (
-        accum: LikesObjectWithNewestStructType,
-        currentValue,
-      ): LikesObjectWithNewestStructType => {
-        if (`${currentValue.parentId}` in accum) {
-          if (currentValue.status === LIKE) {
-            accum[`${currentValue.parentId}`].likesCount += 1;
+    const likesMap = new Map<string, ExtendedLikesInfo>();
 
-            if (
-              accum[`${currentValue.parentId}`].newestLikes.length <
-                MAX_LIMIT &&
-              currentValue.isNewLike === 1
-            ) {
-              const newest = {
-                addedAt: currentValue.createdAt,
-                userId: currentValue.authorId,
-                login: currentValue.authorLogin,
-              };
-
-              accum[`${currentValue.parentId}`].newestLikes.push(newest);
-            }
-          }
-
-          if (currentValue.status === DISLIKE) {
-            accum[`${currentValue.parentId}`].dislikesCount += 1;
-          }
-
-          if (currentValue.authorId === authorId) {
-            accum[`${currentValue.parentId}`].myStatus = currentValue.status;
-          }
-
-          return accum;
-        }
-
-        accum[`${currentValue.parentId}`] = {
-          likesCount: currentValue.status === LIKE ? 1 : 0,
-          dislikesCount: currentValue.status === DISLIKE ? 1 : 0,
-          myStatus:
-            currentValue.authorId === authorId
-              ? currentValue.status
-              : DEFAULT_MY_STATUS,
+    for (const like of likes) {
+      if (!likesMap.has(like.parentId)) {
+        likesMap.set(like.parentId, {
+          likesCount: 0,
+          dislikesCount: 0,
+          myStatus: DEFAULT_MY_STATUS,
           newestLikes: [],
-        };
+        });
+      }
 
-        const newest =
-          currentValue.status === LIKE && currentValue.isNewLike === 1
-            ? {
-                addedAt: currentValue.createdAt,
-                userId: currentValue.authorId,
-                login: currentValue.authorLogin,
-              }
-            : null;
+      const likeInfo = likesMap.get(like.parentId);
 
-        if (newest) {
-          accum[`${currentValue.parentId}`].newestLikes.push(newest);
+      if (like.status === LIKE) {
+        likeInfo.likesCount = likeInfo.likesCount + 1;
+
+        if (likeInfo.newestLikes.length < MAX_LIMIT && like.isNewLike === 1) {
+          const newest = {
+            addedAt: like.createdAt,
+            userId: like.authorId,
+            login: like.authorLogin,
+          };
+
+          likeInfo.newestLikes.push(newest);
         }
+      }
 
-        return accum;
-      },
-      {} as LikesObjectWithNewestStructType,
-    );
+      if (like.status === DISLIKE) {
+        likeInfo.dislikesCount = likeInfo.dislikesCount + 1;
+      }
+
+      if (like.authorId === authorId) {
+        likeInfo.myStatus = like.status;
+      }
+    }
+
+    return Object.fromEntries(likesMap);
   }
 
   async getPostsWithLikes(posts: PostLeanDto[], authorId: string | undefined) {
