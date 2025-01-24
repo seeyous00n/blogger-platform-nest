@@ -1,10 +1,13 @@
 import { InjectModel } from '@nestjs/mongoose';
 import { Like, LikeModelType } from '../../domain/like.entity';
 import { LikesRepository } from '../../infrastructure/likes.repository';
-import { LikeStatusCommentsCommand } from './like-status-comments.usecase';
 import { NotFoundDomainException } from '../../../../../core/exceptions/domain-exception';
 import { UsersRepository } from '../../../../user-accounts/infrastructure/users.repository';
-import { LikeStatusPostsCommand } from './like-status-posts.usecase';
+import { LikeStatusCommandDto } from '../../dto/like-status-command.dto';
+
+class LikeStatusCommand {
+  constructor(public dto: LikeStatusCommandDto) {}
+}
 
 export abstract class LikeStatusBase {
   protected constructor(
@@ -13,7 +16,7 @@ export abstract class LikeStatusBase {
     private usersRepository: UsersRepository,
   ) {}
 
-  async execute(command: LikeStatusCommentsCommand | LikeStatusPostsCommand) {
+  async execute(command: LikeStatusCommand) {
     const { parentId, authorId, likeStatus } = command.dto;
 
     await this.isEntityExistsOrError(parentId);
