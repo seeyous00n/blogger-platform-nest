@@ -25,20 +25,6 @@ const MAX_LIMIT = 3;
 export class LikeHelper {
   constructor(@InjectModel(Like.name) private LikeModel: LikeModelType) {}
 
-  private setLikeInfo(like: Like, likeInfo: LikeInfo, authorId: string) {
-    if (like.status === LIKE) {
-      likeInfo.likesCount = likeInfo.likesCount + 1;
-    }
-
-    if (like.status === DISLIKE) {
-      likeInfo.dislikesCount = likeInfo.dislikesCount + 1;
-    }
-
-    if (like.authorId === authorId) {
-      likeInfo.myStatus = like.status;
-    }
-  }
-
   private getLikesInfoWithoutNewest(
     index: string,
     likes: Like[],
@@ -55,7 +41,17 @@ export class LikeHelper {
     const likeInfo = likesMap.get(index);
 
     for (const like of likes) {
-      this.setLikeInfo(like, likeInfo, authorId);
+      if (like.status === LIKE) {
+        likeInfo.likesCount = likeInfo.likesCount + 1;
+      }
+
+      if (like.status === DISLIKE) {
+        likeInfo.dislikesCount = likeInfo.dislikesCount + 1;
+      }
+
+      if (like.authorId === authorId) {
+        likeInfo.myStatus = like.status;
+      }
     }
 
     return likeInfo;
@@ -94,7 +90,17 @@ export class LikeHelper {
 
       const likeInfo = likesMap.get(like.parentId);
 
-      this.setLikeInfo(like, likeInfo, authorId);
+      if (like.status === LIKE) {
+        likeInfo.likesCount = likeInfo.likesCount + 1;
+      }
+
+      if (like.status === DISLIKE) {
+        likeInfo.dislikesCount = likeInfo.dislikesCount + 1;
+      }
+
+      if (like.authorId === authorId) {
+        likeInfo.myStatus = like.status;
+      }
     }
 
     return Object.fromEntries(likesMap);
