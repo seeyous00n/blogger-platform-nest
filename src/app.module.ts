@@ -7,11 +7,17 @@ import { UserAccountsModule } from './features/user-accounts/user-accounts.modul
 import { TestingModule } from './features/testing/testing.module';
 import { BloggersPlatformModule } from './features/bloggers-platform/bloggers-platform.module';
 import { CqrsModule } from '@nestjs/cqrs';
+import { ConfigService } from '@nestjs/config';
 
 @Module({
   imports: [
     config,
-    MongooseModule.forRoot(process.env.MONGO_URL),
+    MongooseModule.forRootAsync({
+      useFactory: (configService: ConfigService) => ({
+        uri: configService.get<string>('MONGO_URL'),
+      }),
+      inject: [ConfigService],
+    }),
     UserAccountsModule,
     BloggersPlatformModule,
     TestingModule,

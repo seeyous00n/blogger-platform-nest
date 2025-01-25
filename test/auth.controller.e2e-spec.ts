@@ -6,6 +6,8 @@ import * as request from 'supertest';
 import { delay } from './helpers/delay';
 import { authBasicData, newUserData } from './mock/mock-data';
 import { UserTestManager } from './helpers/user-test-manager';
+import { ConfigService } from '@nestjs/config';
+import { ACCESS_TOKEN_INJECT } from '../src/features/user-accounts/constants/auth-tokens.jwt';
 
 describe('AuthController', () => {
   let app: INestApplication;
@@ -15,12 +17,15 @@ describe('AuthController', () => {
 
   beforeAll(async () => {
     const result = await initSettings((moduleBuilder) =>
-      moduleBuilder.overrideProvider(JwtService).useValue(
-        new JwtService({
-          secret: process.env.JWT_ACCESS_SECRET,
-          signOptions: { expiresIn: '2s' },
-        }),
-      ),
+      moduleBuilder.overrideProvider(ACCESS_TOKEN_INJECT).useFactory({
+        factory: (configService: ConfigService) => {
+          return new JwtService({
+            secret: configService.get<string>('JWT_ACCESS_SECRET'),
+            signOptions: { expiresIn: '2s' },
+          });
+        },
+        inject: [ConfigService],
+      }),
     );
 
     app = result.app;

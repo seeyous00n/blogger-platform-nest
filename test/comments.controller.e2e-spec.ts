@@ -164,8 +164,6 @@ describe('CommentController', () => {
     });
 
     it('should return code 403', async () => {
-      await userTestManager.createUser(newUserData);
-
       const anotherAccessToken = await userTestManager.loginUser({
         loginOrEmail: users[1].login,
         password: newUserData.password,
@@ -178,8 +176,6 @@ describe('CommentController', () => {
     });
 
     it('should return code 404', async () => {
-      await userTestManager.createUser(newUserData);
-
       await request(httpServer)
         .delete(`/comments/123`)
         .auth(accessToken, { type: 'bearer' })
