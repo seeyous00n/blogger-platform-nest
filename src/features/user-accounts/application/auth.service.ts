@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import { UsersRepository } from '../infrastructure/users.repository';
 import { LoginUserInputDto } from '../api/input-dto/login-user.input-dto';
 import { createUuid } from '../../../core/utils/createUuid.utils';
@@ -8,23 +8,29 @@ import { AuthRepository } from '../infrastructure/auth.repository';
 import { InjectModel } from '@nestjs/mongoose';
 import { Session, SessionModelType } from '../domain/session.entity';
 import { EmailService, TYPE_EMAIL } from '../../notifications/email.service';
-import { ConfigService } from '@nestjs/config';
 import { CryptoService } from '../../../core/adapters/bcrypt/bcrypt.service';
 import {
   BadRequestDomainException,
   UnauthorizedDomainException,
 } from '../../../core/exceptions/domain-exception';
 import { IatAndExpRefreshTokenType, PayloadType } from '../types/types';
+import {
+  ACCESS_TOKEN_INJECT,
+  REFRESH_TOKEN_INJECT,
+} from '../constants/auth-tokens.jwt';
 
 @Injectable()
 export class AuthService {
   constructor(
     @InjectModel(Session.name) private SessionModel: SessionModelType,
     private usersRepository: UsersRepository,
+    @Inject(ACCESS_TOKEN_INJECT)
+    private accessTokeService: JwtService,
+    @Inject(REFRESH_TOKEN_INJECT)
+    private refreshTokenService: JwtService,
     private jwtService: JwtService,
     private authRepository: AuthRepository,
     private emailService: EmailService,
-    private configService: ConfigService,
     private cryptoService: CryptoService,
   ) {}
 
@@ -176,22 +182,11 @@ export class AuthService {
   }
 
   getTokens(payload: PayloadType) {
-    // const accessToken = this.jwtService.sign(
-    //   { userId: payload.userId },
-    //   {
-    //     secret: this.configService.get('JWT_ACCESS_SECRET'),
-    //     expiresIn: this.configService.get('JWT_ACCESS_TOKEN_EXPIRES'),
-    //   },
-    // );
-    //TODO move jwtService to adapter??
-    const accessToken = this.jwtService.sign({
+    const accessToken = this.accessTokeService.sign({
       userId: payload.userId,
     });
 
-    const refreshToken = this.jwtService.sign(payload, {
-      secret: this.configService.get('JWT_REFRESH_SECRET'),
-      expiresIn: this.configService.get('JWT_REFRESH_TOKEN_EXPIRES'),
-    });
+    const refreshToken = this.refreshTokenService.sign(payload);
 
     return { accessToken, refreshToken };
   }
