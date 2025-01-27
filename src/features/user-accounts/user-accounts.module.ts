@@ -12,7 +12,6 @@ import { Session, SessionSchema } from './domain/session.entity';
 import { AuthRepository } from './infrastructure/auth.repository';
 import { NotificationsModule } from '../notifications/notifications.module';
 import { CryptoServiceModule } from '../../core/adapters/bcrypt/bcrypt-service.module';
-import { ConfigService } from '@nestjs/config';
 import {
   ACCESS_TOKEN_INJECT,
   REFRESH_TOKEN_INJECT,
@@ -26,6 +25,7 @@ import { LogoutUseCase } from './application/usecases/logout.usecese';
 import { RefreshTokenUseCase } from './application/usecases/refresh-token.usecese';
 import { ThrottlerGuard } from '@nestjs/throttler';
 import { APP_GUARD } from '@nestjs/core';
+import { UserAccountsConfig } from './config/user-accounts.config';
 
 const useCases = [
   DeleteSessionUseCase,
@@ -48,27 +48,27 @@ const useCases = [
   providers: [
     {
       provide: ACCESS_TOKEN_INJECT,
-      useFactory: (configService: ConfigService) => {
+      useFactory: (userAccountsConfig: UserAccountsConfig) => {
         return new JwtService({
-          secret: configService.get<string>('JWT_ACCESS_SECRET'),
+          secret: userAccountsConfig.jwtAccessSecret,
           signOptions: {
-            expiresIn: configService.get<string>('JWT_ACCESS_TOKEN_EXPIRES'),
+            expiresIn: userAccountsConfig.jwtAccessTokenExpires,
           },
         });
       },
-      inject: [ConfigService],
+      inject: [UserAccountsConfig],
     },
     {
       provide: REFRESH_TOKEN_INJECT,
-      useFactory: (configService: ConfigService): JwtService => {
+      useFactory: (userAccountsConfig: UserAccountsConfig): JwtService => {
         return new JwtService({
-          secret: configService.get<string>('JWT_REFRESH_SECRET'),
+          secret: userAccountsConfig.jwtRefreshSecret,
           signOptions: {
-            expiresIn: configService.get<string>('JWT_REFRESH_TOKEN_EXPIRES'),
+            expiresIn: userAccountsConfig.jwtRefreshTokenExpires,
           },
         });
       },
-      inject: [ConfigService],
+      inject: [UserAccountsConfig],
     },
     {
       provide: APP_GUARD,
@@ -82,6 +82,7 @@ const useCases = [
     SecurityQueryRepository,
     SecurityService,
     ...useCases,
+    UserAccountsConfig,
   ],
   exports: [MongooseModule, UsersRepository],
 })

@@ -17,7 +17,6 @@ import { Post, PostSchema } from './posts/domain/post.entity';
 import { Comment, CommentSchema } from './comments/domain/comment.entity';
 import { BlogIdIsExistConstraint } from '../../core/decorators/validation/login-is-exist.decorator';
 import { JwtModule } from '@nestjs/jwt';
-import { ConfigService } from '@nestjs/config';
 import { CreateCommentUseCase } from './comments/application/usecases/create-comment.usecase';
 import { UserAccountsModule } from '../user-accounts/user-accounts.module';
 import { LikeHelper } from './likes/like.helper';
@@ -27,6 +26,7 @@ import { DeleteCommentUseCase } from './comments/application/usecases/delete-com
 import { LikesRepository } from './likes/infrastructure/likes.repository';
 import { LikeStatusCommentsUseCase } from './likes/application/usecases/like-status-comments.usecase';
 import { LikeStatusPostsUseCase } from './likes/application/usecases/like-status-posts.usecase';
+import { UserAccountsConfig } from '../user-accounts/config/user-accounts.config';
 
 const useCases = [
   CreateCommentUseCase,
@@ -44,15 +44,7 @@ const useCases = [
       { name: Comment.name, schema: CommentSchema },
       { name: Like.name, schema: LikeSchema },
     ]),
-    JwtModule.registerAsync({
-      useFactory: (configService: ConfigService) => ({
-        secret: configService.get<string>('JWT_ACCESS_SECRET'),
-        signOptions: {
-          expiresIn: configService.get<string>('JWT_ACCESS_TOKEN_EXPIRES'),
-        },
-      }),
-      inject: [ConfigService],
-    }),
+    JwtModule,
     UserAccountsModule,
   ],
   controllers: [BlogsController, PostsController, CommentsController],
@@ -70,6 +62,7 @@ const useCases = [
     ...useCases,
     LikeHelper,
     LikesRepository,
+    UserAccountsConfig,
   ],
   exports: [MongooseModule],
 })

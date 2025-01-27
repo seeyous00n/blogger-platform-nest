@@ -12,7 +12,10 @@ import { CoreModule } from './core/core.module';
 import * as process from 'node:process';
 
 const testingModule = [];
-if (process.env.NODE_ENV === 'testing') {
+if (
+  process.env.NODE_ENV === 'testing' ||
+  process.env.NODE_ENV == 'development'
+) {
   testingModule.push(TestingModule);
 }
 

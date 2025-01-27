@@ -6,7 +6,7 @@ import {
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { Request } from 'express';
-import { ConfigService } from '@nestjs/config';
+import { UserAccountsConfig } from '../config/user-accounts.config';
 
 const BEARER = 'Bearer';
 
@@ -14,7 +14,7 @@ const BEARER = 'Bearer';
 export class JwtAuthGuard implements CanActivate {
   constructor(
     private jwtService: JwtService,
-    private configService: ConfigService,
+    private userAccountsConfig: UserAccountsConfig,
   ) {}
 
   async canActivate(context: ExecutionContext) {
@@ -26,7 +26,7 @@ export class JwtAuthGuard implements CanActivate {
 
     try {
       const payload = await this.jwtService.verifyAsync(token, {
-        secret: this.configService.get('JWT_ACCESS_SECRET'),
+        secret: this.userAccountsConfig.jwtAccessSecret,
       });
 
       request['userId'] = payload.userId;

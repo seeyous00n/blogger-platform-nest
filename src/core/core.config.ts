@@ -1,6 +1,7 @@
 import { ConfigService } from '@nestjs/config';
 import { Injectable } from '@nestjs/common';
-import { IsNotEmpty, IsNumber, validateSync } from 'class-validator';
+import { IsNotEmpty, IsNumber } from 'class-validator';
+import { configValidateUtils } from './utils/config-validate.utils';
 
 @Injectable()
 export class CoreConfig {
@@ -21,12 +22,6 @@ export class CoreConfig {
   );
 
   constructor(private configService: ConfigService) {
-    const errors = validateSync(this);
-    if (errors.length > 0) {
-      const sortMessages = errors
-        .map((error) => Object.values(error.constraints || {}).join(', '))
-        .join(';\r\n');
-      throw new Error('validation: ' + sortMessages);
-    }
+    configValidateUtils.validate(this);
   }
 }

@@ -5,16 +5,14 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
-import { ConfigService } from '@nestjs/config';
-import { AuthService } from '../application/auth.service';
 import { AuthRepository } from '../infrastructure/auth.repository';
+import { UserAccountsConfig } from '../config/user-accounts.config';
 
 @Injectable()
 export class JwtRefreshAuthGuard implements CanActivate {
   constructor(
     private jwtService: JwtService,
-    private configService: ConfigService,
-    private authService: AuthService,
+    private userAccountsConfig: UserAccountsConfig,
     private authRepository: AuthRepository,
   ) {}
 
@@ -44,7 +42,7 @@ export class JwtRefreshAuthGuard implements CanActivate {
   async validateToke(refreshToken: string) {
     try {
       return await this.jwtService.verifyAsync(refreshToken, {
-        secret: this.configService.get('JWT_REFRESH_SECRET'),
+        secret: this.userAccountsConfig.jwtRefreshSecret,
       });
     } catch {
       throw new UnauthorizedException();
