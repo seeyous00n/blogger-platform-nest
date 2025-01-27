@@ -21,9 +21,9 @@ export const initSettings = async (
     imports: [AppModule],
   })
     .overrideProvider(EmailService)
-    .useClass(EmailServiceMock)
-    .overrideGuard(ThrottlerGuard)
-    .useValue({ canActivate: () => true }); //don't work hh??
+    .useClass(EmailServiceMock);
+  // .overrideGuard(ThrottlerGuard)
+  // .useValue({ canActivate: () => true }); //don't work hh??
 
   if (addSettingsToModuleBuilder) {
     addSettingsToModuleBuilder(testingModuleBuilder);
