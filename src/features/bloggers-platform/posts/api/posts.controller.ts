@@ -29,7 +29,9 @@ import { GetCommentsQueryParams } from '../../comments/api/input-dto/get-comment
 import { LikeStatusInputDto } from '../../likes/dto/like-status.input-dto';
 import { LikeStatusPostsCommand } from '../../likes/application/usecases/like-status-posts.usecase';
 import { BasicAuthGuard } from '../../../user-accounts/guards/basic-auth.guard';
+import { SkipThrottle } from '@nestjs/throttler';
 
+@SkipThrottle()
 @Controller('posts')
 export class PostsController {
   constructor(

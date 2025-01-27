@@ -8,6 +8,7 @@ import { TestingModule } from './features/testing/testing.module';
 import { BloggersPlatformModule } from './features/bloggers-platform/bloggers-platform.module';
 import { CqrsModule } from '@nestjs/cqrs';
 import { ConfigService } from '@nestjs/config';
+import { ThrottlerModule } from '@nestjs/throttler';
 
 @Module({
   imports: [
@@ -22,6 +23,12 @@ import { ConfigService } from '@nestjs/config';
     BloggersPlatformModule,
     TestingModule,
     CqrsModule.forRoot(),
+    ThrottlerModule.forRoot([
+      {
+        ttl: 10000,
+        limit: 5,
+      },
+    ]),
   ],
   controllers: [AppController],
   providers: [AppService],

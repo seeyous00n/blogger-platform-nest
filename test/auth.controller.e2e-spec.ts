@@ -217,4 +217,91 @@ describe('AuthController', () => {
         .expect(HttpStatus.UNAUTHORIZED);
     });
   });
+
+  describe('POST /logout', () => {
+    let users;
+
+    beforeEach(async () => {
+      users = await userTestManager.createSeveralUsers(1);
+    });
+
+    it('should logout', async () => {
+      await userTestManager.registrationUser(newUserData);
+
+      const tokens = await userTestManager.loginUserGetTwoTokens({
+        loginOrEmail: users[0].login,
+        password: newUserData.password,
+      });
+
+      await request(httpServer)
+        .post('/auth/logout')
+        .set('Cookie', [tokens.refreshToken])
+        .auth(tokens.accessToken, { type: 'bearer' })
+        .expect(HttpStatus.NO_CONTENT);
+    });
+  });
+
+  describe('POST /refresh-token', () => {
+    let users;
+
+    beforeEach(async () => {
+      users = await userTestManager.createSeveralUsers(1);
+    });
+
+    it('should refresh tokens', async () => {
+      await userTestManager.registrationUser(newUserData);
+
+      const tokens = await userTestManager.loginUserGetTwoTokens({
+        loginOrEmail: users[0].login,
+        password: newUserData.password,
+      });
+
+      const response = await request(httpServer)
+        .post('/auth/refresh-token')
+        .set('Cookie', [tokens.refreshToken])
+        .auth(tokens.accessToken, { type: 'bearer' })
+        .expect(HttpStatus.OK);
+
+      expect(response.body.accessToken).not.toBe(tokens.accessToken);
+    });
+  });
+
+  describe('POST /auth/login', () => {
+    it('check Throttle', async () => {
+      await userTestManager.registrationUser(newUserData);
+
+      await userTestManager.loginUser({
+        loginOrEmail: newUserData.login,
+        password: newUserData.password,
+      });
+      await userTestManager.loginUser({
+        loginOrEmail: newUserData.login,
+        password: newUserData.password,
+      });
+      await userTestManager.loginUser({
+        loginOrEmail: newUserData.login,
+        password: newUserData.password,
+      });
+      await userTestManager.loginUser({
+        loginOrEmail: newUserData.login,
+        password: newUserData.password,
+      });
+      await userTestManager.loginUser({
+        loginOrEmail: newUserData.login,
+        password: newUserData.password,
+      });
+      await userTestManager.loginUser({
+        loginOrEmail: newUserData.login,
+        password: newUserData.password,
+      });
+
+      await userTestManager.loginUser(
+        {
+          loginOrEmail: newUserData.login,
+          password: newUserData.password,
+        },
+        HttpStatus.TOO_MANY_REQUESTS,
+      );
+    });
+  });
 });

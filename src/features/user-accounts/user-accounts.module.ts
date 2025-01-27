@@ -17,6 +17,22 @@ import {
   ACCESS_TOKEN_INJECT,
   REFRESH_TOKEN_INJECT,
 } from './constants/auth-tokens.jwt';
+import { SecurityController } from './api/security.controller';
+import { SecurityQueryRepository } from './infrastructure/query/security.query-repository';
+import { DeleteSessionUseCase } from './application/usecases/delete-session.usecase';
+import { SecurityService } from './application/security.service';
+import { DeleteSessionsUseCase } from './application/usecases/delete-sessions.usecase';
+import { LogoutUseCase } from './application/usecases/logout.usecese';
+import { RefreshTokenUseCase } from './application/usecases/refresh-token.usecese';
+import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
+import { APP_GUARD } from '@nestjs/core';
+
+const useCases = [
+  DeleteSessionUseCase,
+  DeleteSessionsUseCase,
+  LogoutUseCase,
+  RefreshTokenUseCase,
+];
 
 @Module({
   imports: [
@@ -28,7 +44,7 @@ import {
     NotificationsModule,
     CryptoServiceModule,
   ],
-  controllers: [UsersController, AuthController],
+  controllers: [UsersController, AuthController, SecurityController],
   providers: [
     {
       provide: ACCESS_TOKEN_INJECT,
@@ -59,6 +75,9 @@ import {
     UsersQueryRepository,
     AuthService,
     AuthRepository,
+    SecurityQueryRepository,
+    SecurityService,
+    ...useCases,
   ],
   exports: [MongooseModule, UsersRepository],
 })

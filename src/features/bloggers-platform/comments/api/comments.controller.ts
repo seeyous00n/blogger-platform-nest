@@ -21,7 +21,9 @@ import { DeleteCommentCommand } from '../application/usecases/delete-comment.use
 import { ObjectIdValidationPipe } from '../../../../core/pipes/object-id-validation-pipe.service';
 import { LikeStatusInputDto } from '../../likes/dto/like-status.input-dto';
 import { LikeStatusCommentsCommand } from '../../likes/application/usecases/like-status-comments.usecase';
+import { SkipThrottle } from '@nestjs/throttler';
 
+@SkipThrottle()
 @Controller('comments')
 export class CommentsController {
   constructor(

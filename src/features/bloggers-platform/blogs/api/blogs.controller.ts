@@ -25,7 +25,9 @@ import { ObjectIdValidationPipe } from '../../../../core/pipes/object-id-validat
 import { JwtOptionalAuthGuard } from '../../../user-accounts/guards/jwt-optional-auth.guard';
 import { userIdFromParam } from '../../../../core/decorators/userId-from-request.param.decorator';
 import { BasicAuthGuard } from '../../../user-accounts/guards/basic-auth.guard';
+import { SkipThrottle } from '@nestjs/throttler';
 
+@SkipThrottle()
 @Controller('blogs')
 export class BlogsController {
   constructor(

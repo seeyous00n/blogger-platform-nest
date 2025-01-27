@@ -5,10 +5,11 @@ import {
   HttpCode,
   HttpStatus,
   Post,
+  Req,
   Res,
   UseGuards,
 } from '@nestjs/common';
-import { Response } from 'express';
+import { Request, Response } from 'express';
 import { AuthService } from '../application/auth.service';
 import { LoginUserInputDto } from './input-dto/login-user.input-dto';
 import {
@@ -27,15 +28,23 @@ import { CreateUserInputDto } from './input-dto/create-user.input-dto';
 import { NotFoundDomainException } from '../../../core/exceptions/domain-exception';
 import { tokensName } from '../types/types';
 import { getCookiesDataUtils } from '../../../core/utils/getCookiesData.utils';
+import { JwtRefreshAuthGuard } from '../guards/jwt-refresh-auth.guard';
+import { CommandBus } from '@nestjs/cqrs';
+import { LogoutCommand } from '../application/usecases/logout.usecese';
+import { RefreshTokenCommand } from '../application/usecases/refresh-token.usecese';
+import { SkipThrottle, Throttle, ThrottlerGuard } from '@nestjs/throttler';
 
+@UseGuards(ThrottlerGuard)
 @Controller('auth')
 export class AuthController {
   constructor(
     private authService: AuthService,
     private usersQueryRepository: UsersQueryRepository,
     private usersService: UsersService,
+    private commandBus: CommandBus,
   ) {}
 
+  @Throttle({ default: { limit: 5, ttl: 10000 } })
   @Post('login')
   @HttpCode(HttpStatus.OK)
   async login(
@@ -61,6 +70,7 @@ export class AuthController {
     return { [tokensName.accessToken]: authData.accessToken };
   }
 
+  @SkipThrottle()
   @UseGuards(JwtAuthGuard)
   @Get('me')
   async getMe(@userIdFromParam() userId: string): Promise<UserViewAuthDto> {
@@ -73,6 +83,7 @@ export class AuthController {
     return user;
   }
 
+  @Throttle({ default: { limit: 5, ttl: 10000 } })
   @Post('registration')
   @HttpCode(HttpStatus.NO_CONTENT)
   async registration(@Body() body: CreateUserInputDto) {
@@ -80,30 +91,59 @@ export class AuthController {
     await this.authService.registration(userId);
   }
 
+  @Throttle({ default: { limit: 5, ttl: 10000 } })
   @Post('registration-confirmation')
   @HttpCode(HttpStatus.NO_CONTENT)
   async confirmationEmail(@Body() body: ConfirmationCodeInputDto) {
     await this.authService.confirmation(body.code);
   }
 
+  @Throttle({ default: { limit: 5, ttl: 10000 } })
   @Post('registration-email-resending')
   @HttpCode(HttpStatus.NO_CONTENT)
   async resendingEmail(@Body() body: EmailInputDto) {
     await this.authService.resending(body.email);
   }
 
-  @Post()
-  async refreshToken() {}
+  @SkipThrottle()
+  @UseGuards(JwtRefreshAuthGuard)
+  @Post('refresh-token')
+  @HttpCode(HttpStatus.OK)
+  async refreshToken(
+    @Req() request: Request,
+    @Res({ passthrough: true }) response: Response,
+  ) {
+    const token = request.cookies[tokensName.refreshToken];
+    const { accessToken, refreshToken } = await this.commandBus.execute(
+      new RefreshTokenCommand(token),
+    );
 
-  @Post()
-  async logout() {}
+    response.cookie(
+      tokensName.refreshToken,
+      refreshToken,
+      getCookiesDataUtils(),
+    );
 
+    return { [tokensName.accessToken]: accessToken };
+  }
+
+  @SkipThrottle()
+  @UseGuards(JwtRefreshAuthGuard)
+  @Post('logout')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async logout(@Req() request: Request) {
+    const refreshToken = request.cookies[tokensName.refreshToken];
+    await this.commandBus.execute(new LogoutCommand(refreshToken));
+  }
+
+  @Throttle({ default: { limit: 5, ttl: 10000 } })
   @Post('password-recovery')
   @HttpCode(HttpStatus.NO_CONTENT)
   async passwordRecovery(@Body() body: EmailInputDto) {
     await this.authService.recovery(body.email);
   }
 
+  @Throttle({ default: { limit: 5, ttl: 10000 } })
   @Post('new-password')
   @HttpCode(HttpStatus.NO_CONTENT)
   async newPassword(@Body() body: NewPasswordInputDto) {

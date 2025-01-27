@@ -11,6 +11,7 @@ import { EmailService, TYPE_EMAIL } from '../../notifications/email.service';
 import { CryptoService } from '../../../core/adapters/bcrypt/bcrypt.service';
 import {
   BadRequestDomainException,
+  NotFoundDomainException,
   UnauthorizedDomainException,
 } from '../../../core/exceptions/domain-exception';
 import { IatAndExpRefreshTokenType, PayloadType } from '../types/types';
@@ -188,13 +189,33 @@ export class AuthService {
 
     const refreshToken = this.refreshTokenService.sign(payload);
 
-    return { accessToken, refreshToken };
+    const { iat, exp } = this.getTokenData(refreshToken);
+
+    return { accessToken, refreshToken, iat, exp };
   }
 
-  getTokenData(token: string): IatAndExpRefreshTokenType {
+  getTokenData(token: string): IatAndExpRefreshTokenType & PayloadType {
     const data = this.jwtService.decode(token) as PayloadType &
       IatAndExpRefreshTokenType;
 
-    return { iat: data.iat, exp: data.exp };
+    return {
+      userId: data.userId,
+      deviceId: data.deviceId,
+      iat: data.iat,
+      exp: data.exp,
+    };
+  }
+
+  async findSessionByIatAndDeviceIdOrError(iat: number, deviceId: string) {
+    const session = await this.authRepository.findSessionByIatAndDeviceId(
+      iat,
+      deviceId,
+    );
+
+    if (!session) {
+      throw NotFoundDomainException.create();
+    }
+
+    return session;
   }
 }

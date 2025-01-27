@@ -10,6 +10,8 @@ import { UserTestManager } from './user-test-manager';
 import { BlogTestManager } from './blog-test-manager';
 import { PostTestManager } from './post-test-manager';
 import { CommentTestManager } from './comment-test-manager';
+import { ThrottlerGuard } from '@nestjs/throttler';
+
 type ModuleBuilderType = (moduleBuilder: TestingModuleBuilder) => void;
 
 export const initSettings = async (
@@ -19,7 +21,12 @@ export const initSettings = async (
     imports: [AppModule],
   })
     .overrideProvider(EmailService)
-    .useClass(EmailServiceMock);
+    .useClass(EmailServiceMock)
+    .overrideProvider(ThrottlerGuard)
+    .useValue({
+      ttl: 0, // Отключаем Throttler
+      limit: 0, // Нет ограничений
+    });
 
   if (addSettingsToModuleBuilder) {
     addSettingsToModuleBuilder(testingModuleBuilder);

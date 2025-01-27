@@ -9,7 +9,6 @@ export const TYPE_EMAIL = {
 };
 
 const BASE_URL = 'http://localhost:3003';
-// const BASE_URL = 'https://46d1df4a09c0b3.lhr.life';
 
 @Injectable()
 export class EmailService {

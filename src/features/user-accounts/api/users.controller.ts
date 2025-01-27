@@ -17,7 +17,9 @@ import { GetUsersQueryParams } from './input-dto/get-users-query-params.input-dt
 import { BasicAuthGuard } from '../guards/basic-auth.guard';
 import { ObjectIdValidationPipe } from '../../../core/pipes/object-id-validation-pipe.service';
 import { NotFoundDomainException } from '../../../core/exceptions/domain-exception';
+import { SkipThrottle } from '@nestjs/throttler';
 
+@SkipThrottle()
 @Controller('users')
 export class UsersController {
   constructor(
