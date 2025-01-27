@@ -24,7 +24,7 @@ import { SecurityService } from './application/security.service';
 import { DeleteSessionsUseCase } from './application/usecases/delete-sessions.usecase';
 import { LogoutUseCase } from './application/usecases/logout.usecese';
 import { RefreshTokenUseCase } from './application/usecases/refresh-token.usecese';
-import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
+import { ThrottlerGuard } from '@nestjs/throttler';
 import { APP_GUARD } from '@nestjs/core';
 
 const useCases = [
@@ -69,6 +69,10 @@ const useCases = [
         });
       },
       inject: [ConfigService],
+    },
+    {
+      provide: APP_GUARD,
+      useClass: ThrottlerGuard,
     },
     UsersService,
     UsersRepository,

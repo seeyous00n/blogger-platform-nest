@@ -32,9 +32,8 @@ import { JwtRefreshAuthGuard } from '../guards/jwt-refresh-auth.guard';
 import { CommandBus } from '@nestjs/cqrs';
 import { LogoutCommand } from '../application/usecases/logout.usecese';
 import { RefreshTokenCommand } from '../application/usecases/refresh-token.usecese';
-import { SkipThrottle, Throttle, ThrottlerGuard } from '@nestjs/throttler';
+import { SkipThrottle } from '@nestjs/throttler';
 
-@UseGuards(ThrottlerGuard)
 @Controller('auth')
 export class AuthController {
   constructor(
@@ -44,7 +43,6 @@ export class AuthController {
     private commandBus: CommandBus,
   ) {}
 
-  @Throttle({ default: { limit: 5, ttl: 10000 } })
   @Post('login')
   @HttpCode(HttpStatus.OK)
   async login(
@@ -83,7 +81,6 @@ export class AuthController {
     return user;
   }
 
-  @Throttle({ default: { limit: 5, ttl: 10000 } })
   @Post('registration')
   @HttpCode(HttpStatus.NO_CONTENT)
   async registration(@Body() body: CreateUserInputDto) {
@@ -91,14 +88,12 @@ export class AuthController {
     await this.authService.registration(userId);
   }
 
-  @Throttle({ default: { limit: 5, ttl: 10000 } })
   @Post('registration-confirmation')
   @HttpCode(HttpStatus.NO_CONTENT)
   async confirmationEmail(@Body() body: ConfirmationCodeInputDto) {
     await this.authService.confirmation(body.code);
   }
 
-  @Throttle({ default: { limit: 5, ttl: 10000 } })
   @Post('registration-email-resending')
   @HttpCode(HttpStatus.NO_CONTENT)
   async resendingEmail(@Body() body: EmailInputDto) {
@@ -136,14 +131,12 @@ export class AuthController {
     await this.commandBus.execute(new LogoutCommand(refreshToken));
   }
 
-  @Throttle({ default: { limit: 5, ttl: 10000 } })
   @Post('password-recovery')
   @HttpCode(HttpStatus.NO_CONTENT)
   async passwordRecovery(@Body() body: EmailInputDto) {
     await this.authService.recovery(body.email);
   }
 
-  @Throttle({ default: { limit: 5, ttl: 10000 } })
   @Post('new-password')
   @HttpCode(HttpStatus.NO_CONTENT)
   async newPassword(@Body() body: NewPasswordInputDto) {
