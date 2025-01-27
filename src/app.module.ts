@@ -6,29 +6,36 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { UserAccountsModule } from './features/user-accounts/user-accounts.module';
 import { TestingModule } from './features/testing/testing.module';
 import { BloggersPlatformModule } from './features/bloggers-platform/bloggers-platform.module';
-import { CqrsModule } from '@nestjs/cqrs';
-import { ConfigService } from '@nestjs/config';
 import { ThrottlerModule } from '@nestjs/throttler';
+import { CoreConfig } from './core/core.config';
+import { CoreModule } from './core/core.module';
+import * as process from 'node:process';
+
+const testingModule = [];
+if (process.env.NODE_ENV === 'testing') {
+  testingModule.push(TestingModule);
+}
 
 @Module({
   imports: [
     config,
+    CoreModule,
     MongooseModule.forRootAsync({
-      useFactory: (configService: ConfigService) => ({
-        uri: configService.get<string>('MONGO_URL'),
-      }),
-      inject: [ConfigService],
+      useFactory: (coreConfig: CoreConfig) => ({ uri: coreConfig.mongoURI }),
+      inject: [CoreConfig],
+    }),
+    ThrottlerModule.forRootAsync({
+      useFactory: (coreConfig: CoreConfig) => [
+        {
+          ttl: coreConfig.restrictionTTL,
+          limit: coreConfig.restrictionLimit,
+        },
+      ],
+      inject: [CoreConfig],
     }),
     UserAccountsModule,
     BloggersPlatformModule,
-    TestingModule,
-    CqrsModule.forRoot(),
-    ThrottlerModule.forRoot([
-      {
-        ttl: 10000,
-        limit: 5,
-      },
-    ]),
+    ...testingModule,
   ],
   controllers: [AppController],
   providers: [AppService],
