@@ -3,13 +3,7 @@ import { initSettings } from './helpers/init-settings';
 import { JwtService } from '@nestjs/jwt';
 import { deleteAllData } from './helpers/delete-all-data';
 import * as request from 'supertest';
-import { delay } from './helpers/delay';
-import {
-  authBasicData,
-  newBlogData,
-  newPostData,
-  newUserData,
-} from './mock/mock-data';
+import { newUserData } from './mock/mock-data';
 import { UserTestManager } from './helpers/user-test-manager';
 import { ConfigService } from '@nestjs/config';
 import { ACCESS_TOKEN_INJECT } from '../src/features/user-accounts/constants/auth-tokens.jwt';
@@ -17,7 +11,6 @@ import { ACCESS_TOKEN_INJECT } from '../src/features/user-accounts/constants/aut
 describe('SecurityController', () => {
   let app: INestApplication;
   let httpServer;
-  let dbConnection;
   let userTestManager: UserTestManager;
 
   beforeAll(async () => {
@@ -35,7 +28,6 @@ describe('SecurityController', () => {
 
     app = result.app;
     httpServer = result.httpServer;
-    dbConnection = result.dbConnection;
     userTestManager = result.userTestManager;
   });
 
@@ -60,7 +52,7 @@ describe('SecurityController', () => {
         password: newUserData.password,
       });
 
-      const data = await request(httpServer)
+      await request(httpServer)
         .get('/security/devices')
         .set('Cookie', [tokens.refreshToken])
         .auth(tokens.accessToken, { type: 'bearer' })

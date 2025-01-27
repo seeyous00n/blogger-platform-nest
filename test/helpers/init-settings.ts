@@ -10,7 +10,6 @@ import { UserTestManager } from './user-test-manager';
 import { BlogTestManager } from './blog-test-manager';
 import { PostTestManager } from './post-test-manager';
 import { CommentTestManager } from './comment-test-manager';
-import { ThrottlerGuard } from '@nestjs/throttler';
 
 type ModuleBuilderType = (moduleBuilder: TestingModuleBuilder) => void;
 

@@ -115,7 +115,7 @@ describe('PostsController', () => {
         password: newUserData.password,
       });
 
-      const response = await request(httpServer)
+      await request(httpServer)
         .get(`/posts/${newPost.id}`)
         .auth(accessToken, { type: 'bearer' })
         .query(query)
@@ -181,7 +181,7 @@ describe('PostsController', () => {
     });
 
     it('should create new comment', async () => {
-      const result = await request(httpServer)
+      await request(httpServer)
         .post(`/posts/${newPost.id}/comments`)
         .auth(accessToken, { type: 'bearer' })
         .send(newCommentData)
