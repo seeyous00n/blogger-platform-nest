@@ -1,6 +1,6 @@
 import { ConfigService } from '@nestjs/config';
 import { Injectable } from '@nestjs/common';
-import { IsNotEmpty, IsNumber, validateSync } from 'class-validator';
+import { IsNotEmpty, IsNumber } from 'class-validator';
 import { configValidateUtils } from '../../../core/utils/config-validate.utils';
 
 @Injectable()
