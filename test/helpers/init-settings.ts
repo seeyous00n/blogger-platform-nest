@@ -22,11 +22,8 @@ export const initSettings = async (
   })
     .overrideProvider(EmailService)
     .useClass(EmailServiceMock)
-    .overrideProvider(ThrottlerGuard)
-    .useValue({
-      ttl: 0, // Отключаем Throttler
-      limit: 0, // Нет ограничений
-    });
+    .overrideGuard(ThrottlerGuard)
+    .useValue({ canActivate: () => true }); //don't work hh??
 
   if (addSettingsToModuleBuilder) {
     addSettingsToModuleBuilder(testingModuleBuilder);

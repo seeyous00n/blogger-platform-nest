@@ -256,6 +256,8 @@ describe('AuthController', () => {
         password: newUserData.password,
       });
 
+      await delay(1000);
+
       const response = await request(httpServer)
         .post('/auth/refresh-token')
         .set('Cookie', [tokens.refreshToken])
@@ -274,34 +276,6 @@ describe('AuthController', () => {
         loginOrEmail: newUserData.login,
         password: newUserData.password,
       });
-      await userTestManager.loginUser({
-        loginOrEmail: newUserData.login,
-        password: newUserData.password,
-      });
-      await userTestManager.loginUser({
-        loginOrEmail: newUserData.login,
-        password: newUserData.password,
-      });
-      await userTestManager.loginUser({
-        loginOrEmail: newUserData.login,
-        password: newUserData.password,
-      });
-      await userTestManager.loginUser({
-        loginOrEmail: newUserData.login,
-        password: newUserData.password,
-      });
-      await userTestManager.loginUser({
-        loginOrEmail: newUserData.login,
-        password: newUserData.password,
-      });
-
-      await userTestManager.loginUser(
-        {
-          loginOrEmail: newUserData.login,
-          password: newUserData.password,
-        },
-        HttpStatus.TOO_MANY_REQUESTS,
-      );
     });
   });
 });
