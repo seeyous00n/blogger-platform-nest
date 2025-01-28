@@ -7,9 +7,10 @@ import { UserAccountsModule } from './features/user-accounts/user-accounts.modul
 import { TestingModule } from './features/testing/testing.module';
 import { BloggersPlatformModule } from './features/bloggers-platform/bloggers-platform.module';
 import { ThrottlerModule } from '@nestjs/throttler';
-import { CoreConfig } from './core/core.config';
+import { AppConfig } from './config/app.config';
 import { CoreModule } from './core/core.module';
 import * as process from 'node:process';
+import { AppConfigModule } from './config/app-config.module';
 
 const testingModule = [];
 if (
@@ -24,17 +25,19 @@ if (
     config,
     CoreModule,
     MongooseModule.forRootAsync({
-      useFactory: (coreConfig: CoreConfig) => ({ uri: coreConfig.mongoURI }),
-      inject: [CoreConfig],
+      imports: [AppConfigModule],
+      useFactory: (appConfig: AppConfig) => ({ uri: appConfig.mongoURI }),
+      inject: [AppConfig],
     }),
     ThrottlerModule.forRootAsync({
-      useFactory: (coreConfig: CoreConfig) => [
+      imports: [AppConfigModule],
+      useFactory: (appConfig: AppConfig) => [
         {
-          ttl: coreConfig.restrictionTTL,
-          limit: coreConfig.restrictionLimit,
+          ttl: appConfig.restrictionTTL,
+          limit: appConfig.restrictionLimit,
         },
       ],
-      inject: [CoreConfig],
+      inject: [AppConfig],
     }),
     UserAccountsModule,
     BloggersPlatformModule,

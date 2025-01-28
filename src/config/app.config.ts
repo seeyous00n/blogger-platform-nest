@@ -1,10 +1,10 @@
 import { ConfigService } from '@nestjs/config';
 import { Injectable } from '@nestjs/common';
 import { IsNotEmpty, IsNumber } from 'class-validator';
-import { configValidateUtils } from './utils/config-validate.utils';
+import { configValidateUtils } from '../core/utils/config-validate.utils';
 
 @Injectable()
-export class CoreConfig {
+export class AppConfig {
   @IsNumber({}, { message: 'Set the PORT in env file!' })
   port: number = Number(this.configService.get<number>('PORT'));
 
