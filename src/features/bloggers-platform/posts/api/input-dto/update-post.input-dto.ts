@@ -5,6 +5,7 @@ import {
   postShortDescriptionConstraints,
   postTitleConstraints,
 } from '../../domain/post.entity';
+import { BlogIdIsExist } from '../../../../../core/decorators/validation/login-is-exist.decorator';
 
 export class UpdatePostInputDto {
   @IsStringWithTrim(1, postTitleConstraints.maxLength)
@@ -17,5 +18,6 @@ export class UpdatePostInputDto {
   content: string;
 
   @IsString()
+  @BlogIdIsExist()
   blogId: string;
 }

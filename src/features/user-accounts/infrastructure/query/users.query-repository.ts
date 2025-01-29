@@ -53,7 +53,7 @@ export class UsersQueryRepository {
     });
   }
 
-  async getByIdOrNotFoundError(id: string): Promise<UserViewDto | null> {
+  async getById(id: string): Promise<UserViewDto | null> {
     const user = await this.UserModel.findById({
       _id: id,
       deletionStatus: DeletionStatus.NotDeleted,

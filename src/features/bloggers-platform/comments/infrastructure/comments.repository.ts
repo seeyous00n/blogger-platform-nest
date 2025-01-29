@@ -28,8 +28,18 @@ export class CommentsRepository {
   async findOneOrNotFoundError(id: string): Promise<CommentDocument> {
     const comment = await this.findById(id);
 
-    if (!comment) throw NotFoundDomainException.create('comment not found');
+    if (!comment) throw NotFoundDomainException.create();
 
     return comment;
+  }
+
+  async findByIdAndUserId(
+    id: string,
+    userId: string,
+  ): Promise<CommentDocument> {
+    return this.CommentModel.findOne({
+      _id: id,
+      'commentatorInfo.userId': userId,
+    });
   }
 }

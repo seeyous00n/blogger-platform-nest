@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { MailerService } from '@nestjs-modules/mailer';
-import { ConfigService } from '@nestjs/config';
+import { NotificationsConfig } from './config/notifications.config';
 
 export const TYPE_EMAIL = {
   REGISTRATION: 'registration',
@@ -9,13 +9,12 @@ export const TYPE_EMAIL = {
 };
 
 const BASE_URL = 'http://localhost:3003';
-// const BASE_URL = 'https://46d1df4a09c0b3.lhr.life';
 
 @Injectable()
 export class EmailService {
   constructor(
     private mailerService: MailerService,
-    private configService: ConfigService,
+    private notificationsConfig: NotificationsConfig,
   ) {}
 
   async sendEmail(
@@ -25,7 +24,7 @@ export class EmailService {
   ) {
     const htmlTemplate = this.getTemplate(link, type);
     await this.mailerService.sendMail({
-      from: this.configService.get<string>('SMTP_AUTH_USER'),
+      from: this.notificationsConfig.smtpAuthUser,
       to: to,
       subject: 'Activation link',
       text: '',

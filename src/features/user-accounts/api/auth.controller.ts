@@ -5,10 +5,11 @@ import {
   HttpCode,
   HttpStatus,
   Post,
+  Req,
   Res,
   UseGuards,
 } from '@nestjs/common';
-import { Response } from 'express';
+import { Request, Response } from 'express';
 import { AuthService } from '../application/auth.service';
 import { LoginUserInputDto } from './input-dto/login-user.input-dto';
 import {
@@ -25,17 +26,13 @@ import { EmailInputDto } from './input-dto/email.input-dto';
 import { NewPasswordInputDto } from './input-dto/new-password.input-dto';
 import { CreateUserInputDto } from './input-dto/create-user.input-dto';
 import { NotFoundDomainException } from '../../../core/exceptions/domain-exception';
-
-const TOKENS_NAME = {
-  REFRESH_TOKEN: 'refreshToken',
-  ACCESS_TOKEN: 'accessToken',
-};
-
-const cookiesData = {
-  httpOnly: true,
-  secure: true,
-  maxAge: 1000 * 60 * 60 * 24,
-};
+import { tokensName } from '../types/types';
+import { getCookiesDataUtils } from '../../../core/utils/getCookiesData.utils';
+import { JwtRefreshAuthGuard } from '../guards/jwt-refresh-auth.guard';
+import { CommandBus } from '@nestjs/cqrs';
+import { LogoutCommand } from '../application/usecases/logout.usecese';
+import { RefreshTokenCommand } from '../application/usecases/refresh-token.usecese';
+import { SkipThrottle } from '@nestjs/throttler';
 
 @Controller('auth')
 export class AuthController {
@@ -43,6 +40,7 @@ export class AuthController {
     private authService: AuthService,
     private usersQueryRepository: UsersQueryRepository,
     private usersService: UsersService,
+    private commandBus: CommandBus,
   ) {}
 
   @Post('login')
@@ -62,21 +60,22 @@ export class AuthController {
     const authData = await this.authService.login(data);
 
     response.cookie(
-      TOKENS_NAME.REFRESH_TOKEN,
+      tokensName.refreshToken,
       authData.refreshToken,
-      cookiesData,
+      getCookiesDataUtils(),
     );
 
-    return { [TOKENS_NAME.ACCESS_TOKEN]: authData.accessToken };
+    return { [tokensName.accessToken]: authData.accessToken };
   }
 
+  @SkipThrottle()
   @UseGuards(JwtAuthGuard)
   @Get('me')
   async getMe(@userIdFromParam() userId: string): Promise<UserViewAuthDto> {
     const user =
       this.usersQueryRepository.getAuthUserByIdOrNotFoundError(userId);
     if (!user) {
-      throw NotFoundDomainException.create('user not found');
+      throw NotFoundDomainException.create();
     }
 
     return user;
@@ -101,11 +100,36 @@ export class AuthController {
     await this.authService.resending(body.email);
   }
 
-  @Post()
-  async refreshToken() {}
+  @SkipThrottle()
+  @UseGuards(JwtRefreshAuthGuard)
+  @Post('refresh-token')
+  @HttpCode(HttpStatus.OK)
+  async refreshToken(
+    @Req() request: Request,
+    @Res({ passthrough: true }) response: Response,
+  ) {
+    const token = request.cookies[tokensName.refreshToken];
+    const { accessToken, refreshToken } = await this.commandBus.execute(
+      new RefreshTokenCommand(token),
+    );
 
-  @Post()
-  async logout() {}
+    response.cookie(
+      tokensName.refreshToken,
+      refreshToken,
+      getCookiesDataUtils(),
+    );
+
+    return { [tokensName.accessToken]: accessToken };
+  }
+
+  @SkipThrottle()
+  @UseGuards(JwtRefreshAuthGuard)
+  @Post('logout')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async logout(@Req() request: Request) {
+    const refreshToken = request.cookies[tokensName.refreshToken];
+    await this.commandBus.execute(new LogoutCommand(refreshToken));
+  }
 
   @Post('password-recovery')
   @HttpCode(HttpStatus.NO_CONTENT)

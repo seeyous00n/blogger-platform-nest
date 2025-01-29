@@ -22,7 +22,7 @@ export class BlogsRepository {
   async findOneOrNotFoundError(id: string): Promise<BlogDocument> {
     const blog = await this.findById(id);
 
-    if (!blog) throw NotFoundDomainException.create('blog not found');
+    if (!blog) throw NotFoundDomainException.create();
 
     return blog;
   }

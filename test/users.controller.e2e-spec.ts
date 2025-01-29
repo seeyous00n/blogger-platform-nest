@@ -11,7 +11,7 @@ describe('UsersController', () => {
   let httpServer;
   let userTestManager: UserTestManager;
 
-  beforeEach(async () => {
+  beforeAll(async () => {
     const result = await initSettings();
 
     app = result.app;
@@ -80,7 +80,7 @@ describe('UsersController', () => {
       await request(httpServer)
         .delete(`/users/${users[0].id}`)
         .auth(authBasicData.login, authBasicData.password)
-        .expect(204);
+        .expect(HttpStatus.NO_CONTENT);
 
       const usersWithPagination = await userTestManager.getUsers();
 
@@ -96,14 +96,14 @@ describe('UsersController', () => {
       await request(httpServer)
         .delete(`/users/${user.id}`)
         .auth(authBasicData.login, authBasicData.password)
-        .expect(204);
+        .expect(HttpStatus.NO_CONTENT);
     });
 
     it('should return code 400, when attempting to delete', async () => {
       await request(httpServer)
         .delete(`/users/312`)
         .auth(authBasicData.login, authBasicData.password)
-        .expect(HttpStatus.BAD_REQUEST);
+        .expect(HttpStatus.NOT_FOUND);
     });
   });
 });

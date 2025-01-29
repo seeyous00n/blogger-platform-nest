@@ -2,13 +2,15 @@ import { Test, TestingModuleBuilder } from '@nestjs/testing';
 import { AppModule } from '../../src/app.module';
 import { EmailService } from '../../src/features/notifications/email.service';
 import { EmailServiceMock } from '../mock/email-service.mock';
-import { appSetup } from '../../src/config/app.setup';
+import { appSetup } from '../../src/setup/app.setup';
 import { Connection } from 'mongoose';
 import { getConnectionToken } from '@nestjs/mongoose';
 import { deleteAllData } from './delete-all-data';
 import { UserTestManager } from './user-test-manager';
 import { BlogTestManager } from './blog-test-manager';
 import { PostTestManager } from './post-test-manager';
+import { CommentTestManager } from './comment-test-manager';
+
 type ModuleBuilderType = (moduleBuilder: TestingModuleBuilder) => void;
 
 export const initSettings = async (
@@ -19,6 +21,8 @@ export const initSettings = async (
   })
     .overrideProvider(EmailService)
     .useClass(EmailServiceMock);
+  // .overrideGuard(ThrottlerGuard)
+  // .useValue({ canActivate: () => true }); //don't work hh??
 
   if (addSettingsToModuleBuilder) {
     addSettingsToModuleBuilder(testingModuleBuilder);
@@ -32,6 +36,7 @@ export const initSettings = async (
   const userTestManager = new UserTestManager(app);
   const blogTestManager = new BlogTestManager(app);
   const postTestManager = new PostTestManager(app);
+  const commentTestManager = new CommentTestManager(app);
 
   await app.init();
 
@@ -47,5 +52,6 @@ export const initSettings = async (
     userTestManager,
     blogTestManager,
     postTestManager,
+    commentTestManager,
   };
 };

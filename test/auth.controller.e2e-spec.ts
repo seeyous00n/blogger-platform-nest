@@ -1,29 +1,37 @@
-import { INestApplication } from '@nestjs/common';
+import { HttpStatus, INestApplication } from '@nestjs/common';
 import { initSettings } from './helpers/init-settings';
 import { JwtService } from '@nestjs/jwt';
 import { deleteAllData } from './helpers/delete-all-data';
 import * as request from 'supertest';
 import { delay } from './helpers/delay';
 import { authBasicData, newUserData } from './mock/mock-data';
+import { UserTestManager } from './helpers/user-test-manager';
+import { ConfigService } from '@nestjs/config';
+import { ACCESS_TOKEN_INJECT } from '../src/features/user-accounts/constants/auth-tokens.jwt';
 
 describe('AuthController', () => {
   let app: INestApplication;
   let httpServer;
   let dbConnection;
+  let userTestManager: UserTestManager;
 
-  beforeEach(async () => {
+  beforeAll(async () => {
     const result = await initSettings((moduleBuilder) =>
-      moduleBuilder.overrideProvider(JwtService).useValue(
-        new JwtService({
-          secret: process.env.JWT_ACCESS_SECRET,
-          signOptions: { expiresIn: '2s' },
-        }),
-      ),
+      moduleBuilder.overrideProvider(ACCESS_TOKEN_INJECT).useFactory({
+        factory: (configService: ConfigService) => {
+          return new JwtService({
+            secret: configService.get<string>('JWT_ACCESS_SECRET'),
+            signOptions: { expiresIn: '2s' },
+          });
+        },
+        inject: [ConfigService],
+      }),
     );
 
     app = result.app;
     httpServer = result.httpServer;
     dbConnection = result.dbConnection;
+    userTestManager = result.userTestManager;
   });
 
   beforeEach(async () => {
@@ -35,12 +43,8 @@ describe('AuthController', () => {
   });
 
   describe('POST /login', () => {
-    it('should respond with 200', async () => {
-      await request(httpServer)
-        .post('/users')
-        .auth(authBasicData.login, authBasicData.password)
-        .send(newUserData)
-        .expect(201);
+    it('should response with 200', async () => {
+      await userTestManager.createUser(newUserData);
 
       await request(httpServer)
         .post('/auth/login')
@@ -48,53 +52,39 @@ describe('AuthController', () => {
           loginOrEmail: newUserData.login,
           password: newUserData.password,
         })
-        .expect(200);
+        .expect(HttpStatus.OK);
     });
   });
 
   describe('GET /me', () => {
-    it('should respond with 200', async () => {
-      await request(httpServer)
-        .post('/users')
-        .auth(authBasicData.login, authBasicData.password)
-        .send(newUserData)
-        .expect(201);
+    it('should response with 200', async () => {
+      await userTestManager.createUser(newUserData);
 
-      const result = await request(httpServer)
-        .post('/auth/login')
-        .send({
-          loginOrEmail: newUserData.login,
-          password: newUserData.password,
-        })
-        .expect(200);
+      const accessToken = await userTestManager.loginUser({
+        loginOrEmail: newUserData.login,
+        password: newUserData.password,
+      });
 
       await request(httpServer)
         .get('/auth/me')
-        .auth(result.body.accessToken, { type: 'bearer' })
-        .expect(200);
+        .auth(accessToken, { type: 'bearer' })
+        .expect(HttpStatus.OK);
     });
 
-    it('should should status code 401', async () => {
-      await request(httpServer)
-        .post('/users')
-        .auth(authBasicData.login, authBasicData.password)
-        .send(newUserData)
-        .expect(201);
+    it('should return statusCode 401 when accessToken expire', async () => {
+      await userTestManager.createUser(newUserData);
 
-      const result = await request(httpServer)
-        .post('/auth/login')
-        .send({
-          loginOrEmail: newUserData.login,
-          password: newUserData.password,
-        })
-        .expect(200);
+      const accessToken = await userTestManager.loginUser({
+        loginOrEmail: newUserData.login,
+        password: newUserData.password,
+      });
 
       await delay(2200);
 
       await request(httpServer)
         .get('/auth/me')
-        .auth(result.body.accessToken, { type: 'bearer' })
-        .expect(401);
+        .auth(accessToken, { type: 'bearer' })
+        .expect(HttpStatus.UNAUTHORIZED);
     });
   });
 
@@ -103,123 +93,189 @@ describe('AuthController', () => {
       await request(httpServer)
         .post('/auth/registration')
         .send(newUserData)
-        .expect(204);
+        .expect(HttpStatus.NO_CONTENT);
 
       await request(httpServer)
         .get('/users')
         .auth(authBasicData.login, authBasicData.password)
-        .expect(200);
+        .expect(HttpStatus.OK);
     });
   });
 
   describe('POST /registration-confirmation', () => {
     it('should confirmation', async () => {
-      await request(httpServer)
-        .post('/auth/registration')
-        .send(newUserData)
-        .expect(204);
+      await userTestManager.registrationUser(newUserData);
+      const users = await userTestManager.getUsers();
 
-      const users = await request(httpServer)
-        .get('/users')
-        .auth(authBasicData.login, authBasicData.password)
-        .expect(200);
-
-      const dbAnswer1 = await dbConnection
+      const user = await dbConnection
         .model('User')
-        .findOne({ _id: users.body.items[0].id });
-      expect(dbAnswer1.emailConfirmation.isConfirmed).toBe(false);
+        .findOne({ _id: users.items[0].id });
+      expect(user.emailConfirmation.isConfirmed).toBe(false);
 
       await request(httpServer)
         .post('/auth/registration-confirmation')
-        .send({ code: dbAnswer1.emailConfirmation.confirmationCode })
-        .expect(204);
+        .send({ code: user.emailConfirmation.confirmationCode })
+        .expect(HttpStatus.NO_CONTENT);
 
-      const dbAnswer2 = await dbConnection
+      const userUpdateData = await dbConnection
         .model('User')
-        .findOne({ _id: users.body.items[0].id });
-      expect(dbAnswer2.emailConfirmation.isConfirmed).toBe(true);
+        .findOne({ _id: users.items[0].id });
+      expect(userUpdateData.emailConfirmation.isConfirmed).toBe(true);
     });
   });
 
   describe('POST /registration-email-resending', () => {
     it('should resending code', async () => {
-      await request(httpServer)
-        .post('/auth/registration')
-        .send(newUserData)
-        .expect(204);
+      await userTestManager.registrationUser(newUserData);
 
-      const dbAnswer1 = await dbConnection.model('User').findOne({});
+      const user = await dbConnection.model('User').findOne({});
 
       await request(httpServer)
         .post('/auth/registration-email-resending')
         .send({ email: newUserData.email })
-        .expect(204);
+        .expect(HttpStatus.NO_CONTENT);
 
-      const dbAnswer2 = await dbConnection.model('User').findOne({});
-      expect(dbAnswer1.emailConfirmation.confirmationCode).not.toBe(
-        dbAnswer2.emailConfirmation.confirmationCode,
+      const userUpdateData = await dbConnection.model('User').findOne({});
+      expect(user.emailConfirmation.confirmationCode).not.toBe(
+        userUpdateData.emailConfirmation.confirmationCode,
       );
     });
   });
 
   describe('POST /password-recovery', () => {
     it('should change password', async () => {
-      await request(httpServer)
-        .post('/auth/registration')
-        .send(newUserData)
-        .expect(204);
+      await userTestManager.registrationUser(newUserData);
 
-      const dbAnswer1 = await dbConnection.model('User').findOne({});
-      expect(dbAnswer1.passwordHash.recoveryCode).toBeUndefined();
-      expect(dbAnswer1.passwordHash.expirationDate).toBeUndefined();
+      const user = await dbConnection.model('User').findOne({});
+      expect(user.passwordHash.recoveryCode).toBeUndefined();
+      expect(user.passwordHash.expirationDate).toBeUndefined();
 
       await request(httpServer)
         .post('/auth/password-recovery')
         .send({ email: newUserData.email })
-        .expect(204);
+        .expect(HttpStatus.NO_CONTENT);
 
-      const dbAnswer2 = await dbConnection.model('User').findOne({});
-      expect(dbAnswer2).toHaveProperty('passwordHash.recoveryCode');
-      expect(dbAnswer2).toHaveProperty('passwordHash.expirationDate');
+      const userUpdate = await dbConnection.model('User').findOne({});
+      expect(userUpdate).toHaveProperty('passwordHash.recoveryCode');
+      expect(userUpdate).toHaveProperty('passwordHash.expirationDate');
     });
   });
 
   describe('POST /new-password', () => {
-    it('should create new password', async () => {
+    it('should login with new password', async () => {
       const newPassword = '123123123';
 
-      await request(httpServer)
-        .post('/auth/registration')
-        .send(newUserData)
-        .expect(204);
+      await userTestManager.registrationUser(newUserData);
 
       await request(httpServer)
         .post('/auth/password-recovery')
         .send({ email: newUserData.email })
-        .expect(204);
+        .expect(HttpStatus.NO_CONTENT);
 
-      const dbAnswer2 = await dbConnection.model('User').findOne({});
+      const user = await dbConnection.model('User').findOne({});
 
       await request(httpServer)
         .post('/auth/new-password')
         .send({
           newPassword: newPassword,
-          recoveryCode: dbAnswer2.passwordHash.recoveryCode,
+          recoveryCode: user.passwordHash.recoveryCode,
         })
-        .expect(204);
+        .expect(HttpStatus.NO_CONTENT);
+
+      await userTestManager.loginUser({
+        loginOrEmail: newUserData.login,
+        password: newPassword,
+      });
+    });
+
+    it('after update the password should return UNAUTHORIZED', async () => {
+      const newPassword = '123123123';
+
+      await userTestManager.registrationUser(newUserData);
 
       await request(httpServer)
+        .post('/auth/password-recovery')
+        .send({ email: newUserData.email })
+        .expect(HttpStatus.NO_CONTENT);
+
+      const user = await dbConnection.model('User').findOne({});
+
+      await request(httpServer)
+        .post('/auth/new-password')
+        .send({
+          newPassword: newPassword,
+          recoveryCode: user.passwordHash.recoveryCode,
+        })
+        .expect(HttpStatus.NO_CONTENT);
+
+      await request(app.getHttpServer())
         .post('/auth/login')
         .send({
           loginOrEmail: newUserData.login,
           password: newUserData.password,
         })
-        .expect(401);
+        .expect(HttpStatus.UNAUTHORIZED);
+    });
+  });
+
+  describe('POST /logout', () => {
+    let users;
+
+    beforeEach(async () => {
+      users = await userTestManager.createSeveralUsers(1);
+    });
+
+    it('should logout', async () => {
+      await userTestManager.registrationUser(newUserData);
+
+      const tokens = await userTestManager.loginUserGetTwoTokens({
+        loginOrEmail: users[0].login,
+        password: newUserData.password,
+      });
 
       await request(httpServer)
-        .post('/auth/login')
-        .send({ loginOrEmail: newUserData.login, password: newPassword })
-        .expect(200);
+        .post('/auth/logout')
+        .set('Cookie', [tokens.refreshToken])
+        .auth(tokens.accessToken, { type: 'bearer' })
+        .expect(HttpStatus.NO_CONTENT);
+    });
+  });
+
+  describe('POST /refresh-token', () => {
+    let users;
+
+    beforeEach(async () => {
+      users = await userTestManager.createSeveralUsers(1);
+    });
+
+    it('should refresh tokens', async () => {
+      await userTestManager.registrationUser(newUserData);
+
+      const tokens = await userTestManager.loginUserGetTwoTokens({
+        loginOrEmail: users[0].login,
+        password: newUserData.password,
+      });
+
+      await delay(1000);
+
+      const response = await request(httpServer)
+        .post('/auth/refresh-token')
+        .set('Cookie', [tokens.refreshToken])
+        .auth(tokens.accessToken, { type: 'bearer' })
+        .expect(HttpStatus.OK);
+
+      expect(response.body.accessToken).not.toBe(tokens.accessToken);
+    });
+  });
+
+  describe('POST /auth/login', () => {
+    it('check Throttle', async () => {
+      await userTestManager.registrationUser(newUserData);
+
+      await userTestManager.loginUser({
+        loginOrEmail: newUserData.login,
+        password: newUserData.password,
+      });
     });
   });
 });

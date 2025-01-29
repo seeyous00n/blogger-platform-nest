@@ -40,12 +40,8 @@ export class Session {
   }
 
   update(dto: UpdateSessionDto) {
-    this.userId = dto.userId;
     this.tokenIat = dto.tokenIat;
     this.tokenExp = dto.tokenExp;
-    this.ip = dto.ip;
-    this.title = dto.title;
-    this.deviceId = dto.deviceId;
     this.lastActiveDate = new Date(dto.tokenIat * 1000);
   }
 }

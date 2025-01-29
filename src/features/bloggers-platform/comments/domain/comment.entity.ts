@@ -4,7 +4,7 @@ import { HydratedDocument, Model } from 'mongoose';
 import { CreateCommentDto } from '../dto/create-comment.dto';
 import { UpdateCommentDto } from '../dto/update-comment.dto';
 
-export const commentUpdateConstraints = {
+export const commentConstraints = {
   minLength: 20,
   maxLength: 300,
 };
@@ -25,7 +25,7 @@ export class Comment {
   @Prop({ type: String, required: true })
   postId: string;
 
-  @Prop({ type: String, required: true, ...commentUpdateConstraints })
+  @Prop({ type: String, required: true, ...commentConstraints })
   content: string;
 
   @Prop({ type: CommentatorInfoSchema })
@@ -42,8 +42,8 @@ export class Comment {
     comment.postId = dto.postId;
     comment.content = dto.content;
     comment.commentatorInfo = {
-      userId: dto.commentatorInfo.userId,
-      userLogin: dto.commentatorInfo.userLogin,
+      userId: dto.userId,
+      userLogin: dto.userLogin,
     };
 
     return comment as CommentDocument;
