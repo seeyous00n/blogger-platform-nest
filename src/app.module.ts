@@ -11,6 +11,7 @@ import { AppConfig } from './config/app.config';
 import { CoreModule } from './core/core.module';
 import * as process from 'node:process';
 import { AppConfigModule } from './config/app-config.module';
+import { TypeOrmModule } from '@nestjs/typeorm';
 
 const testingModule = [];
 if (
@@ -24,6 +25,18 @@ if (
   imports: [
     config,
     CoreModule,
+    TypeOrmModule.forRootAsync({
+      imports: [AppConfigModule],
+      useFactory: (appConfig: AppConfig) => ({
+        type: appConfig.dbType,
+        host: appConfig.dbHost,
+        port: appConfig.dbPort,
+        username: appConfig.dbUserName,
+        password: appConfig.dbPassword,
+        database: appConfig.dbName,
+      }),
+      inject: [AppConfig],
+    }),
     MongooseModule.forRootAsync({
       imports: [AppConfigModule],
       useFactory: (appConfig: AppConfig) => ({ uri: appConfig.mongoURI }),

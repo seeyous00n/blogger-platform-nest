@@ -26,6 +26,9 @@ import { RefreshTokenUseCase } from './application/usecases/refresh-token.useces
 import { ThrottlerGuard } from '@nestjs/throttler';
 import { APP_GUARD } from '@nestjs/core';
 import { UserAccountsConfig } from './config/user-accounts.config';
+import { UsersSqlRepository } from './infrastructure/users-sql.repository';
+import { UsersSqlQueryRepository } from './infrastructure/query/users-sql.query-repository';
+import { AuthSqlRepository } from './infrastructure/auth-sql.repository';
 
 const useCases = [
   DeleteSessionUseCase,
@@ -76,9 +79,12 @@ const useCases = [
     },
     UsersService,
     UsersRepository,
+    UsersSqlRepository,
     UsersQueryRepository,
+    UsersSqlQueryRepository,
     AuthService,
     AuthRepository,
+    AuthSqlRepository,
     SecurityQueryRepository,
     SecurityService,
     ...useCases,

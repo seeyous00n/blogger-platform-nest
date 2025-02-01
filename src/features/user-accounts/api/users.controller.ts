@@ -15,22 +15,22 @@ import { UsersService } from '../application/users.service';
 import { UsersQueryRepository } from '../infrastructure/query/users.query-repository';
 import { GetUsersQueryParams } from './input-dto/get-users-query-params.input-dto';
 import { BasicAuthGuard } from '../guards/basic-auth.guard';
-import { ObjectIdValidationPipe } from '../../../core/pipes/object-id-validation-pipe.service';
 import { NotFoundDomainException } from '../../../core/exceptions/domain-exception';
 import { SkipThrottle } from '@nestjs/throttler';
+import { UsersSqlQueryRepository } from '../infrastructure/query/users-sql.query-repository';
 
 @SkipThrottle()
-@Controller('users')
+@Controller('sa/users')
 export class UsersController {
   constructor(
     private usersService: UsersService,
-    private usersQueryRepository: UsersQueryRepository,
+    private usersSqlQueryRepository: UsersSqlQueryRepository,
   ) {}
 
   @UseGuards(BasicAuthGuard)
   @Get()
   async getAll(@Query() query: GetUsersQueryParams) {
-    return this.usersQueryRepository.getAll(query);
+    return this.usersSqlQueryRepository.getAll(query);
   }
 
   @UseGuards(BasicAuthGuard)
@@ -39,7 +39,7 @@ export class UsersController {
     const userId = await this.usersService.createUser(body);
     await this.usersService.updateIsConfirmed(userId);
 
-    const user = await this.usersQueryRepository.getById(userId);
+    const user = await this.usersSqlQueryRepository.getById(userId);
     if (!user) {
       throw NotFoundDomainException.create();
     }
@@ -50,7 +50,7 @@ export class UsersController {
   @UseGuards(BasicAuthGuard)
   @Delete(':id')
   @HttpCode(HttpStatus.NO_CONTENT)
-  async delete(@Param('id', new ObjectIdValidationPipe()) id: string) {
+  async delete(@Param('id') id: string) {
     await this.usersService.deleteUser(id);
   }
 }

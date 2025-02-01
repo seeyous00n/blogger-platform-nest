@@ -26,6 +26,8 @@ import { JwtOptionalAuthGuard } from '../../../user-accounts/guards/jwt-optional
 import { userIdFromParam } from '../../../../core/decorators/userId-from-request.param.decorator';
 import { BasicAuthGuard } from '../../../user-accounts/guards/basic-auth.guard';
 import { SkipThrottle } from '@nestjs/throttler';
+import { InjectDataSource } from '@nestjs/typeorm';
+import { DataSource } from 'typeorm';
 
 @SkipThrottle()
 @Controller('blogs')
@@ -35,11 +37,19 @@ export class BlogsController {
     private blogsQueryRepository: BlogsQueryRepository,
     private postsQueryRepository: PostsQueryRepository,
     private postsService: PostsService,
+    @InjectDataSource() private datasource: DataSource,
   ) {}
 
   @Get()
   async getAll(@Query() query: GetBlogQueryParams) {
     return this.blogsQueryRepository.getAll(query);
+  }
+
+  @Get('sql-test')
+  async sqlTest() {
+    const result = await this.datasource.query(`SELECT * FROM "user"`);
+    console.log('resultQuery', result);
+    return result;
   }
 
   @UseGuards(BasicAuthGuard)

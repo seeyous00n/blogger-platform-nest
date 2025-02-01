@@ -33,6 +33,7 @@ import { CommandBus } from '@nestjs/cqrs';
 import { LogoutCommand } from '../application/usecases/logout.usecese';
 import { RefreshTokenCommand } from '../application/usecases/refresh-token.usecese';
 import { SkipThrottle } from '@nestjs/throttler';
+import { UsersSqlQueryRepository } from '../infrastructure/query/users-sql.query-repository';
 
 @Controller('auth')
 export class AuthController {
@@ -40,6 +41,7 @@ export class AuthController {
     private authService: AuthService,
     private usersQueryRepository: UsersQueryRepository,
     private usersService: UsersService,
+    private usersSqlQueryRepository: UsersSqlQueryRepository,
     private commandBus: CommandBus,
   ) {}
 

@@ -17,6 +17,8 @@ import {
   Like,
   LikeModelType,
 } from '../bloggers-platform/likes/domain/like.entity';
+import { InjectDataSource } from '@nestjs/typeorm';
+import { DataSource } from 'typeorm';
 
 @Controller('testing')
 export class TestingController {
@@ -26,6 +28,7 @@ export class TestingController {
     @InjectModel(Post.name) private PostModel: PostModelType,
     @InjectModel(Session.name) private SessionModel: SessionModelType,
     @InjectModel(Like.name) private LikeModel: LikeModelType,
+    @InjectDataSource() private datasource: DataSource,
   ) {}
 
   @Delete('all-data')
@@ -36,5 +39,7 @@ export class TestingController {
     await this.PostModel.deleteMany();
     await this.SessionModel.deleteMany();
     await this.LikeModel.deleteMany();
+
+    await this.datasource.query(`DELETE FROM "user"`);
   }
 }
