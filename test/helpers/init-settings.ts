@@ -10,6 +10,7 @@ import { UserTestManager } from './user-test-manager';
 import { BlogTestManager } from './blog-test-manager';
 import { PostTestManager } from './post-test-manager';
 import { CommentTestManager } from './comment-test-manager';
+import { DataSource } from 'typeorm';
 
 type ModuleBuilderType = (moduleBuilder: TestingModuleBuilder) => void;
 
@@ -41,6 +42,7 @@ export const initSettings = async (
   await app.init();
 
   const dbConnection = app.get<Connection>(getConnectionToken());
+  const dataSource = app.get(DataSource);
   const httpServer = app.getHttpServer();
 
   await deleteAllData(app);
@@ -53,5 +55,6 @@ export const initSettings = async (
     blogTestManager,
     postTestManager,
     commentTestManager,
+    dataSource,
   };
 };

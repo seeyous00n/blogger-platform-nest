@@ -1,6 +1,6 @@
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
-import { AuthRepository } from '../../infrastructure/auth.repository';
 import { AuthService } from '../auth.service';
+import { AuthSqlRepository } from '../../infrastructure/auth-sql.repository';
 
 export class LogoutCommand {
   constructor(public token: string) {}
@@ -9,7 +9,7 @@ export class LogoutCommand {
 @CommandHandler(LogoutCommand)
 export class LogoutUseCase implements ICommandHandler<LogoutCommand, void> {
   constructor(
-    private authRepository: AuthRepository,
+    private authSqlRepository: AuthSqlRepository,
     private authService: AuthService,
   ) {}
 
@@ -19,6 +19,6 @@ export class LogoutUseCase implements ICommandHandler<LogoutCommand, void> {
       iat,
       deviceId,
     );
-    await this.authRepository.delete(session._id.toString());
+    await this.authSqlRepository.delete(session.id);
   }
 }

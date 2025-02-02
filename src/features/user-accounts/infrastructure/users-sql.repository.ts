@@ -1,11 +1,9 @@
 import { Injectable } from '@nestjs/common';
 import { CreateUserDto } from '../dto/create-user.dto';
-import { NotFoundDomainException } from '../../../core/exceptions/domain-exception';
 import { InjectDataSource } from '@nestjs/typeorm';
 import { DataSource } from 'typeorm';
 import { CreateUserSqlDto } from '../dto/sql-dto/create-user.sql-dto';
-import { EmailInfoSqlDto } from '../dto/sql-dto/email-info.sql-dto';
-import { PasswordRecoveryDto } from '../dto/sql-dto/password-recovery.sql-dto';
+import { User } from '../domain/user.sql-entity';
 
 @Injectable()
 export class UsersSqlRepository {
@@ -13,145 +11,117 @@ export class UsersSqlRepository {
 
   async findById(id: string) {
     try {
-      const sql = `SELECT *
-                     FROM "user"
-                     WHERE id = $1
-                       AND deletion_status = false`;
-      const result = await this.datasource.query(sql, [id]);
+      const sqlQuery = `SELECT *
+                              FROM "user"
+                              WHERE id = $1
+                                AND deletion_status = false`;
+      const result = await this.datasource.query(sqlQuery, [id]);
 
-      return result;
-    } catch (error) {
-      throw NotFoundDomainException.create();
+      if (!result.length) return null;
+
+      return User.createInstance(result[0]);
+    } catch {
+      return null;
     }
   }
 
   async create(data: CreateUserSqlDto) {
-    const sql = `INSERT INTO "user" (login, email, password_hash)
-                     VALUES ($1, $2, $3) RETURNING id`;
-    const result = await this.datasource.query(sql, [
+    const sqlQuery = `INSERT INTO "user" (login, email, password_hash)
+                          VALUES ($1, $2, $3) RETURNING id`;
+    const result = await this.datasource.query(sqlQuery, [
       data.login,
       data.email,
       data.password_hash,
     ]);
 
-    return result;
-  }
-
-  async findOneOrNotFoundError(id: string) {
-    const user = await this.findById(id);
-    if (!user) throw NotFoundDomainException.create();
-
-    return user;
-  }
-
-  async updateIsConfirmedCode(id: string) {
-    const sql = `UPDATE "user"
-                     SET email_is_confirmed = true
-                     WHERE id = $1 RETURNING id`;
-    const result = await this.datasource.query(sql, [id]);
-
-    return result;
+    return result[0];
   }
 
   async findByLoginOrEmail(loginOrEmail: string) {
-    const sql = `SELECT id, password_hash
-                     FROM "user"
-                     WHERE (email = $1 OR login = $1)
-                       AND deletion_status = false`;
-    const result = await this.datasource.query(sql, [loginOrEmail]);
+    const sqlQuery = `SELECT id, password_hash
+                          FROM "user"
+                          WHERE (email = $1 OR login = $1)
+                            AND deletion_status = false`;
+    const result = await this.datasource.query(sqlQuery, [loginOrEmail]);
 
-    return result;
-    // return this.UserModel.findOne({
-    //   $or: [{ email: loginOrEmail }, { login: loginOrEmail }],
-    // });
+    if (!result.length) return null;
+
+    return User.createInstance(result[0]);
   }
 
-  async findUserByEmailOrLogin(data: Omit<CreateUserDto, 'password'>) {
-    // return this.UserModel.findOne({
-    //   $or: [{ email: data.email }, { login: data.login }],
-    // });
-
-    const sql = `SELECT *
-                     FROM "user"
-                     WHERE (email = $1 OR login = $2)
-                       AND deletion_status = false`;
-    const result = await this.datasource.query(sql, [data.email, data.login]);
-
-    return result;
-  }
-
-  async makeDeleted(id: string) {
-    const sql = `UPDATE "user"
-                     SET deletion_status = true
-                     WHERE id = $1 RETURNING id`;
-    const result = await this.datasource.query(sql, [id]);
-
-    return result;
-  }
-
-  async updateEmailConfirmationInfo(data: EmailInfoSqlDto) {
-    const sql = `UPDATE "user"
-                     SET email_confirmation_code    = $1,
-                         email_code_expiration_date = $2
-                     WHERE id = $3 RETURNING id`;
-    await this.datasource.query(sql, [
-      data.confirmationCode,
-      data.expirationDate,
-      data.id,
+  async findUserByEmailOrLogin(
+    data: Omit<CreateUserDto, 'password'>,
+  ): Promise<User | null> {
+    const sqlQuery = `SELECT *
+                          FROM "user"
+                          WHERE (email = $1 OR login = $2)
+                            AND deletion_status = false`;
+    const result = await this.datasource.query(sqlQuery, [
+      data.email,
+      data.login,
     ]);
+
+    if (!result.length) return null;
+
+    return User.createInstance(result[0]);
   }
 
   async findByConfirmationCode(code: string) {
-    const sql = `SELECT id, email_is_confirmed, email_code_expiration_date
-                     FROM "user"
-                     WHERE email_confirmation_code = $1`;
-    const result = await this.datasource.query(sql, [code]);
-    return result;
-    // return this.UserModel.findOne({
-    //   'emailConfirmation.confirmationCode': code,
-    // });
-  }
+    const sqlQuery = `SELECT *
+                          FROM "user"
+                          WHERE email_confirmation_code = $1`;
+    const result = await this.datasource.query(sqlQuery, [code]);
 
-  async setIsConfirmed(id: string) {
-    const sql = `UPDATE "user"
-                     SET email_is_confirmed = true
-                     WHERE id = $1`;
-    await this.datasource.query(sql, [id]);
+    if (!result.length) return null;
+
+    return User.createInstance(result[0]);
   }
 
   async findByEmail(email: string) {
-    const sql = `SELECT id, email, email_is_confirmed
-                     FROM "user"
-                     WHERE email = $1`;
-    const result = await this.datasource.query(sql, [email]);
-    return result;
-    // return this.UserModel.findOne({ email: email });
-  }
+    const sqlQuery = `SELECT *
+                          FROM "user"
+                          WHERE email = $1`;
+    const result = await this.datasource.query(sqlQuery, [email]);
 
-  async updatePasswordConfirmationInfo(data: PasswordRecoveryDto) {
-    const sql = `UPDATE "user"
-                     SET password_recovery_code   = $1,
-                         password_expiration_date = $2
-                     WHERE id = $3`;
-    await this.datasource.query(sql, [
-      data.recoveryCode,
-      data.expirationDate,
-      data.id,
-    ]);
+    if (!result.length) return null;
+
+    return User.createInstance(result[0]);
   }
 
   async findByRecoveryCode(recoveryCode: string) {
-    const sql = `SELECT id, password_expiration_date
-                     FROM "user"
-                     WHERE password_recovery_code = $1`;
-    const result = await this.datasource.query(sql, [recoveryCode]);
-    return result;
+    const sqlQuery = `SELECT *
+                          FROM "user"
+                          WHERE password_recovery_code = $1`;
+    const result = await this.datasource.query(sqlQuery, [recoveryCode]);
+
+    if (!result.length) return null;
+
+    return User.createInstance(result[0]);
   }
 
-  async updatePasswordHash(id: string, hash: string) {
-    const sql = `UPDATE "user"
-                     SET password_hash = $1
-                     WHERE id = $2`;
-    await this.datasource.query(sql, [hash, id]);
+  async save(user: User) {
+    const sqlQuery = `UPDATE "user"
+                          SET login                      = $2,
+                              email                      = $3,
+                              password_hash              = $4,
+                              password_recovery_code     = $5,
+                              password_expiration_date   = $6,
+                              email_confirmation_code    = $7,
+                              email_is_confirmed         = $8,
+                              email_code_expiration_date = $9,
+                              deletion_status            = $10
+                          WHERE id = $1`;
+    await this.datasource.query(sqlQuery, [
+      user.id,
+      user.login,
+      user.email,
+      user.passwordHash,
+      user.passwordRecoveryCode,
+      user.passwordExpirationDate,
+      user.emailConfirmationCode,
+      user.emailIsConfirmed,
+      user.emailCodeExpirationDate,
+      user.deletionStatus,
+    ]);
   }
 }

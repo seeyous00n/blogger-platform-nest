@@ -5,15 +5,15 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
-import { AuthRepository } from '../infrastructure/auth.repository';
 import { UserAccountsConfig } from '../config/user-accounts.config';
+import { AuthSqlRepository } from '../infrastructure/auth-sql.repository';
 
 @Injectable()
 export class JwtRefreshAuthGuard implements CanActivate {
   constructor(
     private jwtService: JwtService,
     private userAccountsConfig: UserAccountsConfig,
-    private authRepository: AuthRepository,
+    private authSqlRepository: AuthSqlRepository,
   ) {}
 
   async canActivate(context: ExecutionContext) {
@@ -25,7 +25,7 @@ export class JwtRefreshAuthGuard implements CanActivate {
     }
 
     const tokenData = await this.validateToke(refreshToken);
-    const result = await this.authRepository.findSessionByIatAndDeviceId(
+    const result = await this.authSqlRepository.findSessionByIatAndDeviceId(
       tokenData.iat,
       tokenData.deviceId,
     );

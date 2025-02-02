@@ -15,7 +15,7 @@ export class UserTestManager {
     statusCode: number = HttpStatus.CREATED,
   ): Promise<UserViewDto> {
     const response = await request(this.app.getHttpServer())
-      .post('/users')
+      .post('/sa/users')
       .auth(authBasicData.login, authBasicData.password)
       .send(model)
       .expect(statusCode);
@@ -28,7 +28,7 @@ export class UserTestManager {
     statusCode: number = HttpStatus.OK,
   ): Promise<PaginationViewDto<UserViewDto[]>> {
     const response = await request(this.app.getHttpServer())
-      .get('/users')
+      .get('/sa/users')
       .auth(authBasicData.login, authBasicData.password)
       .query(queryString)
       .expect(statusCode);
@@ -41,7 +41,7 @@ export class UserTestManager {
     statusCode: number = HttpStatus.NO_CONTENT,
   ): Promise<void> {
     await request(this.app.getHttpServer())
-      .delete(`/users/${id}`)
+      .delete(`/sa/users/${id}`)
       .auth(authBasicData.login, authBasicData.password)
       .expect(statusCode);
   }

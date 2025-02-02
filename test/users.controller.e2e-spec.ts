@@ -39,7 +39,7 @@ describe('UsersController', () => {
 
     it('should return error message | field - user', async () => {
       const response = await request(app.getHttpServer())
-        .post('/users')
+        .post('/sa/users')
         .auth(authBasicData.login, authBasicData.password)
         .send({ ...newUserData, login: 'sm' })
         .expect(HttpStatus.BAD_REQUEST);
@@ -78,7 +78,7 @@ describe('UsersController', () => {
       const users = await userTestManager.createSeveralUsers(5);
 
       await request(httpServer)
-        .delete(`/users/${users[0].id}`)
+        .delete(`/sa/users/${users[0].id}`)
         .auth(authBasicData.login, authBasicData.password)
         .expect(HttpStatus.NO_CONTENT);
 
@@ -94,14 +94,14 @@ describe('UsersController', () => {
       const user = await userTestManager.createUser(newUserData);
 
       await request(httpServer)
-        .delete(`/users/${user.id}`)
+        .delete(`/sa/users/${user.id}`)
         .auth(authBasicData.login, authBasicData.password)
         .expect(HttpStatus.NO_CONTENT);
     });
 
     it('should return code 400, when attempting to delete', async () => {
       await request(httpServer)
-        .delete(`/users/312`)
+        .delete(`/sa/users/312`)
         .auth(authBasicData.login, authBasicData.password)
         .expect(HttpStatus.NOT_FOUND);
     });

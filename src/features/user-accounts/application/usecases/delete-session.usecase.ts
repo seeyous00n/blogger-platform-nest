@@ -1,7 +1,7 @@
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { SecurityService } from '../security.service';
 import { DeleteSessionDto } from '../../dto/delete-session.dto';
-import { AuthRepository } from '../../infrastructure/auth.repository';
+import { AuthSqlRepository } from '../../infrastructure/auth-sql.repository';
 
 export class DeleteSessionCommand {
   constructor(public dto: DeleteSessionDto) {}
@@ -13,7 +13,7 @@ export class DeleteSessionUseCase
 {
   constructor(
     private securityService: SecurityService,
-    private authRepository: AuthRepository,
+    private authSqlRepository: AuthSqlRepository,
   ) {}
 
   async execute(command: DeleteSessionCommand): Promise<void> {
@@ -22,6 +22,6 @@ export class DeleteSessionUseCase
       deviceId: command.dto.deviceId,
     });
 
-    await this.authRepository.delete(session._id.toString());
+    await this.authSqlRepository.delete(session.id);
   }
 }

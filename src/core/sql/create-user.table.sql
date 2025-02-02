@@ -1,3 +1,5 @@
+DROP TABLE IF EXISTS "user";
+
 CREATE TABLE "user"
 (
     id                         serial,
@@ -11,5 +13,6 @@ CREATE TABLE "user"
     email_code_expiration_date timestamp with time zone DEFAULT NULL,
     deletion_status            boolean                  DEFAULT false,
     created_at                 timestamp with time zone DEFAULT now(),
-    PRIMARY KEY (id)
+
+    CONSTRAINT pk_user_id PRIMARY KEY (id)
 )

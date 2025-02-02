@@ -1,12 +1,8 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { UsersRepository } from '../infrastructure/users.repository';
 import { LoginUserInputDto } from '../api/input-dto/login-user.input-dto';
 import { createUuid } from '../../../core/utils/createUuid.utils';
 import { CreateTokensInputDto } from '../dto/create-tokens.input-dto';
 import { JwtService } from '@nestjs/jwt';
-import { AuthRepository } from '../infrastructure/auth.repository';
-import { InjectModel } from '@nestjs/mongoose';
-import { Session, SessionModelType } from '../domain/session.entity';
 import { EmailService, TYPE_EMAIL } from '../../notifications/email.service';
 import { CryptoService } from '../../../core/adapters/bcrypt/bcrypt.service';
 import {
@@ -21,82 +17,41 @@ import {
 } from '../constants/auth-tokens.jwt';
 import { AuthSqlRepository } from '../infrastructure/auth-sql.repository';
 import { UsersSqlRepository } from '../infrastructure/users-sql.repository';
+import { CreateSessionSqlDto } from '../dto/sql-dto/create-session.sql-dto';
 
 @Injectable()
 export class AuthService {
   constructor(
-    @InjectModel(Session.name) private SessionModel: SessionModelType,
-    private usersRepository: UsersRepository,
     @Inject(ACCESS_TOKEN_INJECT)
     private accessTokeService: JwtService,
     @Inject(REFRESH_TOKEN_INJECT)
     private refreshTokenService: JwtService,
     private jwtService: JwtService,
-    private authRepository: AuthRepository,
     private emailService: EmailService,
     private cryptoService: CryptoService,
     private authSqlRepository: AuthSqlRepository,
     private usersSqlRepository: UsersSqlRepository,
   ) {}
 
-  // async checkCredentials(data: LoginUserInputDto): Promise<string> {
-  //   const result = await this.usersRepository.findByLoginOrEmail(
-  //     data.loginOrEmail,
-  //   );
-  //   if (!result) {
-  //     throw UnauthorizedDomainException.create();
-  //   }
-  //
-  //   const isAuth = await this.cryptoService.compareHash(
-  //     data.password,
-  //     result.passwordHash.hash,
-  //   );
-  //   if (!isAuth) {
-  //     throw UnauthorizedDomainException.create();
-  //   }
-  //
-  //   return result._id.toString();
-  // }
-
   async checkCredentials(data: LoginUserInputDto): Promise<string> {
-    const result = await this.usersSqlRepository.findByLoginOrEmail(
+    const user = await this.usersSqlRepository.findByLoginOrEmail(
       data.loginOrEmail,
     );
 
-    if (!result.length) {
+    if (!user) {
       throw UnauthorizedDomainException.create();
     }
 
     const isAuth = await this.cryptoService.compareHash(
       data.password,
-      result[0].password_hash,
+      user.passwordHash,
     );
     if (!isAuth) {
       throw UnauthorizedDomainException.create();
     }
 
-    return result[0].id;
+    return user.id;
   }
-
-  // async login(data: CreateTokensInputDto) {
-  //   const deviceId = createUuid();
-  //   const payload = { deviceId, userId: data.userId };
-  //   const tokens = this.getTokens(payload);
-  //   const tokenData = this.getTokenData(tokens.refreshToken);
-  //
-  //   const session = this.SessionModel.createInstance({
-  //     userId: data.userId,
-  //     tokenIat: tokenData.iat,
-  //     tokenExp: tokenData.exp,
-  //     ip: data.ip,
-  //     title: data.title,
-  //     deviceId: deviceId,
-  //   });
-  //
-  //   await this.authRepository.save(session);
-  //
-  //   return { ...tokens };
-  // }
 
   async login(data: CreateTokensInputDto) {
     const deviceId = createUuid();
@@ -104,223 +59,114 @@ export class AuthService {
     const tokens = this.getTokens(payload);
     const tokenData = this.getTokenData(tokens.refreshToken);
 
-    // const session = this.SessionModel.createInstance({
-    //   userId: data.userId,
-    //   tokenIat: tokenData.iat,
-    //   tokenExp: tokenData.exp,
-    //   ip: data.ip,
-    //   title: data.title,
-    //   deviceId: deviceId,
-    // });
-    //
-    // await this.authRepository.save(session);
+    const session = CreateSessionSqlDto.mapToSql({
+      userId: data.userId,
+      tokenIat: tokenData.iat,
+      tokenExp: tokenData.exp,
+      ip: data.ip,
+      title: data.title,
+      deviceId: deviceId,
+    });
 
+    await this.authSqlRepository.create(session);
     return { ...tokens };
   }
 
-  // async registration(id: string) {
-  //   const user = await this.usersRepository.findById(id);
-  //
-  //   const expirationDate = new Date();
-  //   expirationDate.setHours(expirationDate.getHours() + 1);
-  //
-  //   user.emailConfirmation.confirmationCode = createUuid();
-  //   user.emailConfirmation.expirationDate = expirationDate;
-  //
-  //   await this.usersRepository.save(user);
-  //
-  //   this.emailService
-  //       .sendEmail(user.email, user.emailConfirmation.confirmationCode)
-  //       .catch(console.error);
-  // }
-
   async registration(id: string) {
     const user = await this.usersSqlRepository.findById(id);
+    if (!user) throw NotFoundDomainException.create();
 
-    const expirationDate = new Date();
-    expirationDate.setHours(expirationDate.getHours() + 1);
-    const confirmationCode = createUuid();
+    const { code, expirationDate } = this.generateDateAndCode();
 
-    await this.usersSqlRepository.updateEmailConfirmationInfo({
-      id: user[0].id,
-      expirationDate,
-      confirmationCode,
-    });
+    user.emailConfirmationCode = code;
+    user.emailCodeExpirationDate = expirationDate;
 
-    // user.emailConfirmation.confirmationCode = createUuid();
-    // user.emailConfirmation.expirationDate = expirationDate;
-    //
-    // await this.usersRepository.save(user);
+    await this.usersSqlRepository.save(user);
 
-    this.emailService
-      .sendEmail(user[0].email, confirmationCode)
-      .catch(console.error);
+    this.emailService.sendEmail(user.email, code).catch(console.error);
   }
-
-  // async confirmation(code: string) {
-  //   const user = await this.usersRepository.findByConfirmationCode(code);
-  //
-  //   if (!user) {
-  //     throw BadRequestDomainException.create('Incorrect code', 'code');
-  //   }
-  //
-  //   if (user.emailConfirmation.isConfirmed) {
-  //     throw BadRequestDomainException.create('Code confirmed', 'code');
-  //   }
-  //
-  //   if (user.emailConfirmation.expirationDate < new Date()) {
-  //     throw BadRequestDomainException.create('Code has expired', 'code');
-  //   }
-  //
-  //   user.emailConfirmation.isConfirmed = true;
-  //   await this.usersRepository.save(user);
-  // }
 
   async confirmation(code: string) {
     const user = await this.usersSqlRepository.findByConfirmationCode(code);
-    console.log('user confirmation: ', user);
-    if (!user.length) {
+
+    if (!user) {
       throw BadRequestDomainException.create('Incorrect code', 'code');
     }
 
-    if (user[0].email_is_confirmed) {
+    if (user.emailIsConfirmed) {
       throw BadRequestDomainException.create('Code confirmed', 'code');
     }
 
-    if (user[0].email_code_expiration_date < new Date()) {
+    if (user.emailCodeExpirationDate < new Date()) {
       throw BadRequestDomainException.create('Code has expired', 'code');
     }
 
-    await this.usersSqlRepository.setIsConfirmed(user[0].id);
-
-    // user.emailConfirmation.isConfirmed = true;
-    // await this.usersRepository.save(user);
+    user.emailIsConfirmed = true;
+    await this.usersSqlRepository.save(user);
   }
 
   async resending(email: string) {
     const user = await this.usersSqlRepository.findByEmail(email);
 
-    if (!user.length) {
+    if (!user) {
       throw BadRequestDomainException.create('Email not found', 'email');
     }
 
-    if (user[0].email_is_confirmed) {
+    if (user.emailIsConfirmed) {
       throw BadRequestDomainException.create('Email is confirmed', 'email');
     }
 
-    //TODO Все обновление updateEmail и зфыыцщкв вынеси в отделный метод
-    const expirationDate = new Date();
-    expirationDate.setHours(expirationDate.getHours() + 1);
-    const confirmationCode = createUuid();
+    const { code, expirationDate } = this.generateDateAndCode();
 
-    await this.usersSqlRepository.updateEmailConfirmationInfo({
-      id: user[0].id,
-      expirationDate,
-      confirmationCode,
-    });
+    user.emailConfirmationCode = code;
+    user.emailCodeExpirationDate = expirationDate;
+
+    await this.usersSqlRepository.save(user);
 
     this.emailService
-      .sendEmail(email, confirmationCode, TYPE_EMAIL.RESEND_CODE)
+      .sendEmail(email, code, TYPE_EMAIL.RESEND_CODE)
       .catch(console.error);
   }
 
-  // async recovery(email: string) {
-  //   const user = await this.usersRepository.findByEmail(email);
-  //   if (!user) {
-  //     return;
-  //   }
-  //   const expirationDate = new Date();
-  //   expirationDate.setHours(expirationDate.getHours() + 1);
-  //
-  //   user.passwordHash.recoveryCode = createUuid();
-  //   user.passwordHash.expirationDate = expirationDate;
-  //
-  //   await this.usersRepository.save(user);
-  //
-  //   this.emailService
-  //       .sendEmail(
-  //           user.email,
-  //           user.passwordHash.recoveryCode,
-  //           TYPE_EMAIL.RECOVERY_CODE,
-  //       )
-  //       .catch(console.error);
-  // }
-
   async recovery(email: string) {
     const user = await this.usersSqlRepository.findByEmail(email);
-    if (!user.length) {
+    if (!user) {
       return;
     }
 
-    const expirationDate = new Date();
-    expirationDate.setHours(expirationDate.getHours() + 1);
-    const recoveryCode = createUuid();
+    const { code, expirationDate } = this.generateDateAndCode();
 
-    await this.usersSqlRepository.updatePasswordConfirmationInfo({
-      id: user[0].id,
-      expirationDate,
-      recoveryCode,
-    });
+    user.passwordRecoveryCode = code;
+    user.passwordExpirationDate = expirationDate;
 
-    // user.passwordHash.recoveryCode = createUuid();
-    // user.passwordHash.expirationDate = expirationDate;
-    //
-    // await this.usersRepository.save(user);
+    await this.usersSqlRepository.save(user);
 
     this.emailService
-      .sendEmail(email, recoveryCode, TYPE_EMAIL.RECOVERY_CODE)
+      .sendEmail(email, code, TYPE_EMAIL.RECOVERY_CODE)
       .catch(console.error);
   }
 
   async newPassword(code: string, password: string) {
     const user = await this.usersSqlRepository.findByRecoveryCode(code);
 
-    if (!user.length) {
+    if (!user) {
       throw BadRequestDomainException.create(
         'Incorrect recovery code',
         'recoveryCode',
       );
     }
 
-    if (user[0].password_expiration_date < new Date()) {
+    if (user.passwordExpirationDate < new Date()) {
       throw BadRequestDomainException.create(
         'Recovery code expired',
         'recoveryCode',
       );
     }
 
-    const passwordHash =
-      await this.cryptoService.generatePasswordHash(password);
+    user.passwordHash = await this.cryptoService.generatePasswordHash(password);
 
-    await this.usersSqlRepository.updatePasswordHash(user[0].id, passwordHash);
-
-    // user.passwordHash.hash =
-    //     await this.cryptoService.generatePasswordHash(password);
-    // await this.usersRepository.save(user);
+    await this.usersSqlRepository.save(user);
   }
-
-  // async newPassword(code: string, password: string) {
-  //   const user = await this.usersRepository.findByRecoveryCode(code);
-  //
-  //   if (!user) {
-  //     throw BadRequestDomainException.create(
-  //         'Incorrect recovery code',
-  //         'recoveryCode',
-  //     );
-  //   }
-  //
-  //   if (user.passwordHash.expirationDate < new Date()) {
-  //     throw BadRequestDomainException.create(
-  //         'Recovery code expired',
-  //         'recoveryCode',
-  //     );
-  //   }
-  //
-  //   user.passwordHash.hash =
-  //       await this.cryptoService.generatePasswordHash(password);
-  //
-  //   await this.usersRepository.save(user);
-  // }
 
   getTokens(payload: PayloadType) {
     const accessToken = this.accessTokeService.sign({
@@ -347,7 +193,7 @@ export class AuthService {
   }
 
   async findSessionByIatAndDeviceIdOrError(iat: number, deviceId: string) {
-    const session = await this.authRepository.findSessionByIatAndDeviceId(
+    const session = await this.authSqlRepository.findSessionByIatAndDeviceId(
       iat,
       deviceId,
     );
@@ -357,5 +203,13 @@ export class AuthService {
     }
 
     return session;
+  }
+
+  generateDateAndCode() {
+    const expirationDate = new Date();
+    expirationDate.setHours(expirationDate.getHours() + 1);
+    const code = createUuid();
+
+    return { expirationDate, code };
   }
 }

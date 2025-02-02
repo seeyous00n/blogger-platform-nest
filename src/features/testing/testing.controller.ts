@@ -41,5 +41,6 @@ export class TestingController {
     await this.LikeModel.deleteMany();
 
     await this.datasource.query(`DELETE FROM "user"`);
+    await this.datasource.query(`DELETE FROM "session"`);
   }
 }

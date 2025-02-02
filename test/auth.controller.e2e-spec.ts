@@ -13,6 +13,7 @@ describe('AuthController', () => {
   let app: INestApplication;
   let httpServer;
   let dbConnection;
+  let dataSource;
   let userTestManager: UserTestManager;
 
   beforeAll(async () => {
@@ -31,6 +32,7 @@ describe('AuthController', () => {
     app = result.app;
     httpServer = result.httpServer;
     dbConnection = result.dbConnection;
+    dataSource = result.dataSource;
     userTestManager = result.userTestManager;
   });
 
@@ -96,7 +98,7 @@ describe('AuthController', () => {
         .expect(HttpStatus.NO_CONTENT);
 
       await request(httpServer)
-        .get('/users')
+        .get('/sa/users')
         .auth(authBasicData.login, authBasicData.password)
         .expect(HttpStatus.OK);
     });
@@ -107,20 +109,25 @@ describe('AuthController', () => {
       await userTestManager.registrationUser(newUserData);
       const users = await userTestManager.getUsers();
 
-      const user = await dbConnection
-        .model('User')
-        .findOne({ _id: users.items[0].id });
-      expect(user.emailConfirmation.isConfirmed).toBe(false);
+      const user = await dataSource.query(
+        `SELECT *
+                 FROM "user"
+                 WHERE id = $1`,
+        [users.items[0].id],
+      );
 
       await request(httpServer)
         .post('/auth/registration-confirmation')
-        .send({ code: user.emailConfirmation.confirmationCode })
+        .send({ code: user[0].email_confirmation_code })
         .expect(HttpStatus.NO_CONTENT);
 
-      const userUpdateData = await dbConnection
-        .model('User')
-        .findOne({ _id: users.items[0].id });
-      expect(userUpdateData.emailConfirmation.isConfirmed).toBe(true);
+      const userUpdateData = await dataSource.query(
+        `SELECT *
+                 FROM "user"
+                 WHERE id = $1`,
+        [users.items[0].id],
+      );
+      expect(userUpdateData[0].email_is_confirmed).toBe(true);
     });
   });
 
@@ -128,16 +135,22 @@ describe('AuthController', () => {
     it('should resending code', async () => {
       await userTestManager.registrationUser(newUserData);
 
-      const user = await dbConnection.model('User').findOne({});
+      const user = await dataSource.query(
+        `SELECT *
+                 FROM "user"`,
+      );
 
       await request(httpServer)
         .post('/auth/registration-email-resending')
         .send({ email: newUserData.email })
         .expect(HttpStatus.NO_CONTENT);
 
-      const userUpdateData = await dbConnection.model('User').findOne({});
-      expect(user.emailConfirmation.confirmationCode).not.toBe(
-        userUpdateData.emailConfirmation.confirmationCode,
+      const userUpdateData = await dataSource.query(
+        `SELECT *
+                 FROM "user"`,
+      );
+      expect(user[0].email_confirmation_code).not.toBe(
+        userUpdateData[0].email_confirmation_code,
       );
     });
   });
@@ -146,18 +159,25 @@ describe('AuthController', () => {
     it('should change password', async () => {
       await userTestManager.registrationUser(newUserData);
 
-      const user = await dbConnection.model('User').findOne({});
-      expect(user.passwordHash.recoveryCode).toBeUndefined();
-      expect(user.passwordHash.expirationDate).toBeUndefined();
+      const user = await dataSource.query(
+        `SELECT *
+                 FROM "user"`,
+      );
+
+      expect(user[0].password_recovery_code).toBe(null);
+      expect(user[0].password_expiration_date).toBe(null);
 
       await request(httpServer)
         .post('/auth/password-recovery')
         .send({ email: newUserData.email })
         .expect(HttpStatus.NO_CONTENT);
 
-      const userUpdate = await dbConnection.model('User').findOne({});
-      expect(userUpdate).toHaveProperty('passwordHash.recoveryCode');
-      expect(userUpdate).toHaveProperty('passwordHash.expirationDate');
+      const userUpdate = await dataSource.query(
+        `SELECT *
+                 FROM "user"`,
+      );
+      expect(userUpdate[0]).toHaveProperty('password_recovery_code');
+      expect(userUpdate[0]).toHaveProperty('password_expiration_date');
     });
   });
 
@@ -172,13 +192,16 @@ describe('AuthController', () => {
         .send({ email: newUserData.email })
         .expect(HttpStatus.NO_CONTENT);
 
-      const user = await dbConnection.model('User').findOne({});
+      const user = await dataSource.query(
+        `SELECT *
+                 FROM "user"`,
+      );
 
       await request(httpServer)
         .post('/auth/new-password')
         .send({
           newPassword: newPassword,
-          recoveryCode: user.passwordHash.recoveryCode,
+          recoveryCode: user[0].password_recovery_code,
         })
         .expect(HttpStatus.NO_CONTENT);
 
@@ -198,13 +221,16 @@ describe('AuthController', () => {
         .send({ email: newUserData.email })
         .expect(HttpStatus.NO_CONTENT);
 
-      const user = await dbConnection.model('User').findOne({});
+      const user = await dataSource.query(
+        `SELECT *
+                 FROM "user"`,
+      );
 
       await request(httpServer)
         .post('/auth/new-password')
         .send({
           newPassword: newPassword,
-          recoveryCode: user.passwordHash.recoveryCode,
+          recoveryCode: user[0].password_recovery_code,
         })
         .expect(HttpStatus.NO_CONTENT);
 

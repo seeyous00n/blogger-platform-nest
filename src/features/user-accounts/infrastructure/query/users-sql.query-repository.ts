@@ -1,8 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import {
+  UserSqlViewAuthDto,
   UserSqlViewDto,
-  UserViewAuthDto,
-  UserViewDto,
 } from '../../api/view-dto/user.view-dto';
 import { GetUsersQueryParams } from '../../api/input-dto/get-users-query-params.input-dto';
 import { PaginationViewDto } from '../../../../core/dto/base.paginated.view-dto';
@@ -19,7 +18,7 @@ export class UsersSqlQueryRepository {
         ? 'created_at'
         : query.sortBy;
 
-    const sql = `
+    const sqlQuery = `
             SELECT id, login, email, created_at
             FROM "user"
             WHERE (login ILIKE $1 OR email ILIKE $2)
@@ -29,7 +28,7 @@ export class UsersSqlQueryRepository {
             OFFSET $4
         `;
 
-    const users = await this.datasource.query(sql, [
+    const users = await this.datasource.query(sqlQuery, [
       `%${query.searchLoginTerm}%`,
       `%${query.searchEmailTerm}%`,
       query.pageSize,
@@ -55,11 +54,11 @@ export class UsersSqlQueryRepository {
   }
 
   async getById(id: string) {
-    const sql = `SELECT id, login, email, created_at
-                     FROM "user"
-                     WHERE id = $1
-                       AND deletion_status = false`;
-    const user = await this.datasource.query(sql, [id]);
+    const sqlQuery = `SELECT id, login, email, created_at
+                          FROM "user"
+                          WHERE id = $1
+                            AND deletion_status = false`;
+    const user = await this.datasource.query(sqlQuery, [id]);
     if (!user.length) {
       return null;
     }
@@ -67,16 +66,16 @@ export class UsersSqlQueryRepository {
     return UserSqlViewDto.mapToView(user[0]);
   }
 
-  async getAuthUserByIdOrNotFoundError(id: string) {
-    // const user = await this.UserModel.findById({
-    //   _id: id,
-    //   deletionStatus: DeletionStatus.NotDeleted,
-    // });
-    //
-    // if (!user) {
-    //   return null;
-    // }
-    //
-    // return UserViewAuthDto.mapToView(user);
+  async getAuthUser(id: string) {
+    const sqlQuery = `SELECT login, email, id
+                          FROM "user"
+                          WHERE id = $1
+                            AND deletion_status = false`;
+    const user = await this.datasource.query(sqlQuery, [id]);
+    if (!user.length) {
+      return null;
+    }
+
+    return UserSqlViewAuthDto.mapToView(user[0]);
   }
 }
