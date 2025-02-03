@@ -8,7 +8,6 @@ export class Post {
   shortDescription: string;
   content: string;
   blogId: string;
-  blogName: string;
   deletionStatus: boolean;
   createdAt: Date;
 
@@ -19,7 +18,6 @@ export class Post {
     dto.shortDescription = data.short_description;
     dto.content = data.content;
     dto.blogId = data.blog_id;
-    dto.blogName = data.blog_name;
     dto.deletionStatus = data.deletion_status;
     dto.createdAt = data.created_at;
 

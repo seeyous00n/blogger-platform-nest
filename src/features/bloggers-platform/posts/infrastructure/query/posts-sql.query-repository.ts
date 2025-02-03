@@ -28,9 +28,10 @@ export class PostsSqlQueryRepository {
     }
 
     const sqlQuery = `
-            SELECT id, title, short_description, content, blog_id, blog_name, created_at
-            FROM "post"
-            WHERE deletion_status = false ${condition}
+            SELECT p.id, title, short_description, content, blog_id, name AS blog_name, p.created_at
+            FROM "post" p
+                     LEFT JOIN "blog" b ON p.blog_id = b.id
+            WHERE p.deletion_status = false ${condition}
             ORDER BY ${sortBy} ${query.sortDirection}
                 LIMIT $1
             OFFSET $2
@@ -56,10 +57,12 @@ export class PostsSqlQueryRepository {
   }
 
   async getById(id: string, authorId?: string): Promise<PostSqlViewDto | null> {
-    const sqlQuery = `SELECT id, title, short_description, content, blog_id, blog_name, created_at
-                          FROM "post"
-                          WHERE id = $1
-                            AND deletion_status = false`;
+    const sqlQuery = `
+            SELECT post.id, title, short_description, content, blog_id, blog.name AS blog_name, post.created_at
+            FROM post
+                     LEFT JOIN blog ON post.blog_id = blog.id
+            WHERE post.id = $1
+              AND post.deletion_status = false`;
     const post = await this.datasource.query(sqlQuery, [id]);
     if (!post.length) {
       return null;

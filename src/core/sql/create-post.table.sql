@@ -7,7 +7,6 @@ CREATE TABLE "post"
     short_description varchar NOT NULL,
     content           varchar NOT NULL,
     blog_id           integer NOT NULL,
-    blog_name         varchar NOT NULL, --Вроде можно удлалить от сюда blog_name т.к. он у нас есть в таблице blog
     deletion_status   boolean                  DEFAULT false,
     created_at        timestamp with time zone DEFAULT now(),
 
