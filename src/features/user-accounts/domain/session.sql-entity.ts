@@ -1,4 +1,5 @@
 import { UpdateSessionDto } from '../dto/update-session.dto';
+import { CreateSessionInstanceSqlDto } from '../dto/sql-dto/create-session-instance.sql-dto';
 
 export class Session {
   id: string;
@@ -10,7 +11,7 @@ export class Session {
   deviceId: string;
   lastActiveDate: Date;
 
-  static createInstance(data: any): Session {
+  static createInstance(data: CreateSessionInstanceSqlDto): Session {
     const dto = new Session();
 
     dto.id = String(data.id);

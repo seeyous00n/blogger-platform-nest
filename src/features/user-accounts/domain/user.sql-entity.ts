@@ -1,3 +1,5 @@
+import { CreateUserInstanceSqlDto } from '../dto/sql-dto/create-user-instance.sql-dto';
+
 export enum DeletionStatus {
   NotDeleted = 0,
   PermanentDeleted = 1,
@@ -17,7 +19,7 @@ export class User {
   deletionStatus: boolean = false;
   createdAt: Date;
 
-  static createInstance(data: any): User {
+  static createInstance(data: CreateUserInstanceSqlDto): User {
     const dto = new User();
 
     dto.id = String(data.id);

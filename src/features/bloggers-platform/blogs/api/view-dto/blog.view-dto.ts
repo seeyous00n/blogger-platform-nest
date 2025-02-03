@@ -1,6 +1,6 @@
-import { BlogDocument } from '../../domain/blog.entity';
+import { BlogSearchResultSqlDto } from '../../dto/sql-dto/blog-search-result.sql-dto';
 
-export class BlogViewDto {
+export class BlogSqlViewDto {
   id: string;
   name: string;
   description: string;
@@ -8,14 +8,14 @@ export class BlogViewDto {
   createdAt: Date;
   isMembership: boolean;
 
-  static mapToView(blog: BlogDocument): BlogViewDto {
-    const dto = new BlogViewDto();
-    dto.id = blog.id.toString();
+  static mapToView(blog: BlogSearchResultSqlDto): BlogSqlViewDto {
+    const dto = new BlogSqlViewDto();
+    dto.id = String(blog.id);
     dto.name = blog.name;
     dto.description = blog.description;
-    dto.websiteUrl = blog.websiteUrl;
-    dto.createdAt = blog.createdAt;
-    dto.isMembership = blog.isMembership;
+    dto.websiteUrl = blog.website_url;
+    dto.createdAt = blog.created_at;
+    dto.isMembership = blog.is_membership;
 
     return dto;
   }

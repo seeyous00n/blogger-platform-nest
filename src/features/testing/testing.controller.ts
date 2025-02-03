@@ -42,5 +42,7 @@ export class TestingController {
 
     await this.datasource.query(`DELETE FROM "user"`);
     await this.datasource.query(`DELETE FROM "session"`);
+    await this.datasource.query(`DELETE FROM "blog"`);
+    await this.datasource.query(`DELETE FROM "post"`);
   }
 }

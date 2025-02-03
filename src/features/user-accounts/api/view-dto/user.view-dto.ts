@@ -1,5 +1,5 @@
-import { UserDocument } from '../../domain/user.entity';
 import { UserSearchResultSqlDto } from '../../dto/sql-dto/user-search-result.sql-dto';
+import { User } from '../../domain/user.sql-entity';
 
 export class UserSqlViewDto {
   id: string;
@@ -23,7 +23,7 @@ export class UserSqlViewAuthDto {
   login: string;
   email: string;
 
-  static mapToView(user: UserDocument): UserSqlViewAuthDto {
+  static mapToView(user: User): UserSqlViewAuthDto {
     const dto = new UserSqlViewAuthDto();
     dto.userId = String(user.id);
     dto.login = user.login;

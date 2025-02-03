@@ -1,7 +1,7 @@
 import { HttpStatus, INestApplication } from '@nestjs/common';
 import * as request from 'supertest';
 import { CreatePostInputDTO } from '../../src/features/bloggers-platform/posts/api/input-dto/create-post.input-dto';
-import { PostViewDto } from '../../src/features/bloggers-platform/posts/api/view-dto/post.view-dto';
+import { PostSqlViewDto } from '../../src/features/bloggers-platform/posts/api/view-dto/post.view-dto';
 import { authBasicData } from '../mock/mock-data';
 import { UpdatePostInputDto } from '../../src/features/bloggers-platform/posts/api/input-dto/update-post.input-dto';
 import { GetPostsQueryParams } from '../../src/features/bloggers-platform/posts/api/input-dto/get-posts-query-params.input-dto';
@@ -12,7 +12,7 @@ export class PostTestManager {
   async createPost(
     model: CreatePostInputDTO,
     statusCode: number = HttpStatus.CREATED,
-  ): Promise<PostViewDto> {
+  ): Promise<PostSqlViewDto> {
     const response = await request(this.app.getHttpServer())
       .post('/posts')
       .auth(authBasicData.login, authBasicData.password)
@@ -59,8 +59,8 @@ export class PostTestManager {
   async createSeveralPosts(
     blogId: string,
     count: number,
-  ): Promise<PostViewDto[]> {
-    const posts: Promise<PostViewDto>[] = [];
+  ): Promise<PostSqlViewDto[]> {
+    const posts: Promise<PostSqlViewDto>[] = [];
 
     for (let i = 0; i < count; i++) {
       const post = this.createPost({

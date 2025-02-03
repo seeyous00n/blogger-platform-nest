@@ -4,14 +4,12 @@ import { Blog, BlogSchema } from './blogs/domain/blog.entity';
 import { BlogsController } from './blogs/api/blogs.controller';
 import { BlogsService } from './blogs/application/blogs.service';
 import { BlogsRepository } from './blogs/infrastructure/blogs.repository';
-import { BlogsQueryRepository } from './blogs/infrastructure/query/blogs.query-repository';
 import { PostsController } from './posts/api/posts.controller';
 import { CommentsController } from './comments/api/comments.controller';
 import { PostsService } from './posts/application/posts.service';
 import { CommentsService } from './comments/application/comments.service';
 import { PostsRepository } from './posts/infrastructure/posts.repository';
 import { CommentsRepository } from './comments/infrastructure/comments.repository';
-import { PostsQueryRepository } from './posts/infrastructure/query/posts.query-repository';
 import { CommentsQueryRepository } from './comments/infrastructure/query/comments.query-repository';
 import { Post, PostSchema } from './posts/domain/post.entity';
 import { Comment, CommentSchema } from './comments/domain/comment.entity';
@@ -27,6 +25,11 @@ import { LikesRepository } from './likes/infrastructure/likes.repository';
 import { LikeStatusCommentsUseCase } from './likes/application/usecases/like-status-comments.usecase';
 import { LikeStatusPostsUseCase } from './likes/application/usecases/like-status-posts.usecase';
 import { UserAccountsConfig } from '../user-accounts/config/user-accounts.config';
+import { BlogsSqlRepository } from './blogs/infrastructure/blogs-sql.repository';
+import { BlogsSqlQueryRepository } from './blogs/infrastructure/query/blogs-sql.query-repository';
+import { PostsSqlRepository } from './posts/infrastructure/posts-sql.repository';
+import { PostsSqlQueryRepository } from './posts/infrastructure/query/posts-sql.query-repository';
+import { AdminBlogsController } from './blogs/api/admin.blogs.controller';
 
 const useCases = [
   CreateCommentUseCase,
@@ -47,14 +50,21 @@ const useCases = [
     JwtModule,
     UserAccountsModule,
   ],
-  controllers: [BlogsController, PostsController, CommentsController],
+  controllers: [
+    BlogsController,
+    PostsController,
+    CommentsController,
+    AdminBlogsController,
+  ],
   providers: [
     BlogsService,
     BlogsRepository,
-    BlogsQueryRepository,
+    BlogsSqlRepository,
+    BlogsSqlQueryRepository,
     PostsService,
     PostsRepository,
-    PostsQueryRepository,
+    PostsSqlRepository,
+    PostsSqlQueryRepository,
     CommentsService,
     CommentsRepository,
     CommentsQueryRepository,

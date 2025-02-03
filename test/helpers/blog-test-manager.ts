@@ -1,6 +1,6 @@
 import { HttpStatus, INestApplication } from '@nestjs/common';
 import { CreateBlogInputDto } from '../../src/features/bloggers-platform/blogs/api/input-dto/create-blog.input-dto';
-import { BlogViewDto } from '../../src/features/bloggers-platform/blogs/api/view-dto/blog.view-dto';
+import { BlogSqlViewDto } from '../../src/features/bloggers-platform/blogs/api/view-dto/blog.view-dto';
 import * as request from 'supertest';
 import { authBasicData } from '../mock/mock-data';
 import { UpdateBlogInputDto } from '../../src/features/bloggers-platform/blogs/api/input-dto/update-blog.input-dto';
@@ -15,7 +15,7 @@ export class BlogTestManager {
   async createBlog(
     model: CreateBlogInputDto,
     statusCode: number = HttpStatus.CREATED,
-  ): Promise<BlogViewDto> {
+  ): Promise<BlogSqlViewDto> {
     const response = await request(this.app.getHttpServer())
       .post('/blogs')
       .auth(authBasicData.login, authBasicData.password)
@@ -64,7 +64,7 @@ export class BlogTestManager {
   async getBlogs(
     queryString?: GetBlogQueryParams,
     statusCode: number = HttpStatus.OK,
-  ): Promise<PaginationViewDto<BlogViewDto[]>> {
+  ): Promise<PaginationViewDto<BlogSqlViewDto[]>> {
     const response = await request(this.app.getHttpServer())
       .get('/blogs')
       .query(queryString)
@@ -73,8 +73,8 @@ export class BlogTestManager {
     return response.body;
   }
 
-  async createSeveralBlogs(count: number): Promise<BlogViewDto[]> {
-    const blogs: Promise<BlogViewDto>[] = [];
+  async createSeveralBlogs(count: number): Promise<BlogSqlViewDto[]> {
+    const blogs: Promise<BlogSqlViewDto>[] = [];
 
     for (let i = 0; i < count; i++) {
       const blog = this.createBlog({

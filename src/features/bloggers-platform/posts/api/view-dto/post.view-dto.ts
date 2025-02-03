@@ -17,6 +17,7 @@ export class NewestLikes {
   userId: string;
   login: string;
 }
+
 export class ExtendedLikesInfo {
   likesCount: number;
   dislikesCount: number;
@@ -55,6 +56,46 @@ export class PostViewDto {
     dto.blogName = post.blogName;
     dto.createdAt = post.createdAt;
     dto.extendedLikesInfo = post.extendedLikesInfo;
+
+    return dto;
+  }
+}
+
+export class PostSqlDto {
+  id: string;
+  title: string;
+  short_description: string;
+  content: string;
+  blog_id: string;
+  blog_name: string;
+  created_at: Date;
+}
+
+export class PostSqlViewDto {
+  id: string;
+  title: string;
+  shortDescription: string;
+  content: string;
+  blogId: string;
+  blogName: string;
+  createdAt: Date;
+  extendedLikesInfo: ExtendedLikesInfo;
+
+  static mapToView(post: PostSqlDto): PostSqlViewDto {
+    const dto = new PostSqlViewDto();
+    dto.id = String(post.id);
+    dto.title = post.title;
+    dto.shortDescription = post.short_description;
+    dto.content = post.content;
+    dto.blogId = String(post.blog_id);
+    dto.blogName = post.blog_name;
+    dto.createdAt = post.created_at;
+    dto.extendedLikesInfo = {
+      likesCount: 0,
+      dislikesCount: 0,
+      myStatus: 'None',
+      newestLikes: [],
+    };
 
     return dto;
   }
