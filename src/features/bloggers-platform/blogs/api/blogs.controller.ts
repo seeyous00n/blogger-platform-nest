@@ -1,4 +1,4 @@
-import { Controller, Get, Param, Query } from '@nestjs/common';
+import { Controller, Get, Param, Query, UseGuards } from '@nestjs/common';
 import { GetBlogQueryParams } from './input-dto/get-blogs-query-params.input-dto';
 import { BlogsService } from '../application/blogs.service';
 import { GetPostsQueryParams } from '../../posts/api/input-dto/get-posts-query-params.input-dto';
@@ -7,6 +7,7 @@ import { userIdFromParam } from '../../../../core/decorators/userId-from-request
 import { SkipThrottle } from '@nestjs/throttler';
 import { BlogsSqlQueryRepository } from '../infrastructure/query/blogs-sql.query-repository';
 import { PostsSqlQueryRepository } from '../../posts/infrastructure/query/posts-sql.query-repository';
+import { JwtOptionalAuthGuard } from '../../../user-accounts/guards/jwt-optional-auth.guard';
 
 @SkipThrottle()
 @Controller('blogs')
@@ -22,6 +23,7 @@ export class BlogsController {
     return this.blogsSqlQueryRepository.getAll(query);
   }
 
+  @UseGuards(JwtOptionalAuthGuard)
   @Get(':id/posts')
   async getPostsByBlogId(
     @Query() query: GetPostsQueryParams,

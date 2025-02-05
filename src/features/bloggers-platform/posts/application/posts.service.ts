@@ -12,13 +12,12 @@ export class PostsService {
     private postsSqlRepository: PostsSqlRepository,
   ) {}
 
-  async createPost(dto: Omit<CreatePostDto, 'blogName'>) {
+  async createPost(dto: CreatePostDto) {
     const blog = await this.blogsSqlRepository.findById(dto.blogId);
     if (!blog) throw NotFoundDomainException.create();
 
     const post = await this.postsSqlRepository.create({
       ...dto,
-      blogName: blog.name,
     });
     if (!post) throw NotFoundDomainException.create();
 

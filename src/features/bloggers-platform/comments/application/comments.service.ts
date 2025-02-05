@@ -1,33 +1,22 @@
 import { Injectable } from '@nestjs/common';
-import { InjectModel } from '@nestjs/mongoose';
-import {
-  Comment,
-  CommentDocument,
-  CommentModelType,
-} from '../domain/comment.entity';
-import { CommentsRepository } from '../infrastructure/comments.repository';
 import {
   ForbiddenDomainException,
   NotFoundDomainException,
 } from '../../../../core/exceptions/domain-exception';
+import { CommentsSqlRepository } from '../infrastructure/comments.sql-repository';
+import { Comment } from '../domain/comment.sql-entity';
 
 @Injectable()
 export class CommentsService {
-  constructor(
-    @InjectModel(Comment.name) private CommentModel: CommentModelType,
-    private commentsRepository: CommentsRepository,
-  ) {}
+  constructor(private commentsSqlRepository: CommentsSqlRepository) {}
 
-  async checkOwnerComment(
-    commentId: string,
-    userId: string,
-  ): Promise<CommentDocument> {
-    const comment = await this.commentsRepository.findById(commentId);
+  async checkOwnerComment(commentId: string, userId: string): Promise<Comment> {
+    const comment = await this.commentsSqlRepository.findById(commentId);
     if (!comment) {
       throw NotFoundDomainException.create();
     }
 
-    const result = await this.commentsRepository.findByIdAndUserId(
+    const result = await this.commentsSqlRepository.findByIdAndUserId(
       commentId,
       userId,
     );

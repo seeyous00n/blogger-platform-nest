@@ -1,5 +1,5 @@
 import { IsStringWithTrim } from '../../../../../core/decorators/validation/is-string-with-trim';
-import { commentConstraints } from '../../domain/comment.entity';
+import { commentConstraints } from '../../domain/comment.sql-entity';
 
 export class CreateCommentInputDto {
   postId: string;

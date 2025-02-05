@@ -1,5 +1,6 @@
 import { ObjectId } from 'mongoose';
 import { DeletionStatus } from '../../../../../core/types/enums';
+import { MyStatus } from '../../../likes/domain/like.sql-entity';
 
 export class PostLeanDto {
   _id: ObjectId;
@@ -21,7 +22,7 @@ export class NewestLikes {
 export class ExtendedLikesInfo {
   likesCount: number;
   dislikesCount: number;
-  myStatus: string;
+  myStatus: MyStatus;
   newestLikes: NewestLikes[];
 }
 
@@ -69,6 +70,10 @@ export class PostSqlDto {
   blog_id: string;
   blog_name: string;
   created_at: Date;
+  likes_count: number;
+  dislikes_count: number;
+  my_status: MyStatus;
+  newest_likes: NewestLikes[];
 }
 
 export class PostSqlViewDto {
@@ -91,10 +96,10 @@ export class PostSqlViewDto {
     dto.blogName = post.blog_name;
     dto.createdAt = post.created_at;
     dto.extendedLikesInfo = {
-      likesCount: 0,
-      dislikesCount: 0,
-      myStatus: 'None',
-      newestLikes: [],
+      likesCount: Number(post.likes_count),
+      dislikesCount: Number(post.dislikes_count),
+      myStatus: post.my_status ? post.my_status : MyStatus.None,
+      newestLikes: post.newest_likes ? post.newest_likes : [],
     };
 
     return dto;

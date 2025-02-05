@@ -1,12 +1,10 @@
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
-import { InjectModel } from '@nestjs/mongoose';
 import { LikeStatusCommandDto } from '../../dto/like-status-command.dto';
 import { NotFoundDomainException } from '../../../../../core/exceptions/domain-exception';
-import { UsersRepository } from '../../../../user-accounts/infrastructure/users.repository';
-import { Like, LikeModelType } from '../../domain/like.entity';
-import { LikesRepository } from '../../infrastructure/likes.repository';
 import { LikeStatusBase } from './like-status-base';
-import { PostsRepository } from '../../../posts/infrastructure/posts.repository';
+import { UsersSqlRepository } from '../../../../user-accounts/infrastructure/users-sql.repository';
+import { LikesSqlRepository } from '../../infrastructure/likes.sql-repository';
+import { PostsSqlRepository } from '../../../posts/infrastructure/posts-sql.repository';
 
 export class LikeStatusPostsCommand {
   constructor(public dto: LikeStatusCommandDto) {}
@@ -18,16 +16,15 @@ export class LikeStatusPostsUseCase
   implements ICommandHandler<LikeStatusPostsCommand, void>
 {
   constructor(
-    @InjectModel(Like.name) LikeModel: LikeModelType,
-    private postsRepository: PostsRepository,
-    usersRepository: UsersRepository,
-    likesRepository: LikesRepository,
+    private postsSqlRepository: PostsSqlRepository,
+    usersSqlRepository: UsersSqlRepository,
+    likesSqlRepository: LikesSqlRepository,
   ) {
-    super(LikeModel, likesRepository, usersRepository);
+    super(likesSqlRepository, usersSqlRepository);
   }
 
   async isEntityExistsOrError(parentId: string) {
-    const post = await this.postsRepository.findById(parentId);
+    const post = await this.postsSqlRepository.findById(parentId);
     if (!post) {
       throw NotFoundDomainException.create();
     }

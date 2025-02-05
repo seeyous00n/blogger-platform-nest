@@ -2,6 +2,18 @@ import { DeletionStatus } from '../../../user-accounts/domain/user.sql-entity';
 import { CreateBlogInstanceSqlDto } from '../dto/sql-dto/create-blog.sql-dto';
 import { UpdateBlogDto } from '../dto/update-blog.dto';
 
+export const blogNameConstraints = {
+  maxLength: 15,
+};
+
+export const blogDescriptionConstraints = {
+  maxLength: 500,
+};
+
+export const blogWebsiteUrlConstraints = {
+  maxLength: 100,
+};
+
 export class Blog {
   id: string;
   name: string;

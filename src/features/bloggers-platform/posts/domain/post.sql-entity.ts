@@ -2,6 +2,16 @@ import { DeletionStatus } from '../../../user-accounts/domain/user.sql-entity';
 import { UpdatePostDto } from '../dto/update-post.dto';
 import { CreatePostInstanceSqlDto } from '../dto/sql-dto/create-post-instance.sql-dto';
 
+export const postTitleConstraints = {
+  maxLength: 30,
+};
+export const postShortDescriptionConstraints = {
+  maxLength: 100,
+};
+export const postContentConstraints = {
+  maxLength: 1000,
+};
+
 export class Post {
   id: string;
   title: string;

@@ -21,7 +21,6 @@ import { JwtAuthGuard } from '../../../user-accounts/guards/jwt-auth.guard';
 import { userIdFromParam } from '../../../../core/decorators/userId-from-request.param.decorator';
 import { CommandBus } from '@nestjs/cqrs';
 import { CreateCommentCommand } from '../../comments/application/usecases/create-comment.usecase';
-import { CommentsQueryRepository } from '../../comments/infrastructure/query/comments.query-repository';
 import { JwtOptionalAuthGuard } from '../../../user-accounts/guards/jwt-optional-auth.guard';
 import { GetCommentsQueryParams } from '../../comments/api/input-dto/get-comments-query-params.input-dto';
 import { LikeStatusInputDto } from '../../likes/dto/like-status.input-dto';
@@ -29,6 +28,7 @@ import { LikeStatusPostsCommand } from '../../likes/application/usecases/like-st
 import { BasicAuthGuard } from '../../../user-accounts/guards/basic-auth.guard';
 import { SkipThrottle } from '@nestjs/throttler';
 import { PostsSqlQueryRepository } from '../infrastructure/query/posts-sql.query-repository';
+import { CommentsSqlQueryRepository } from '../../comments/infrastructure/query/comments.sql-query-repository';
 
 @SkipThrottle()
 @Controller('posts')
@@ -37,7 +37,7 @@ export class PostsController {
     private postsService: PostsService,
     private postsSqlQueryRepository: PostsSqlQueryRepository,
     private commandBus: CommandBus,
-    private commentsQueryRepository: CommentsQueryRepository,
+    private commentsSqlQueryRepository: CommentsSqlQueryRepository,
   ) {}
 
   @Get()
@@ -69,7 +69,8 @@ export class PostsController {
     @userIdFromParam() userId: string | null,
   ) {
     const postId = await this.postsService.getPostId(id);
-    return this.commentsQueryRepository.getAll(query, userId, postId);
+
+    return this.commentsSqlQueryRepository.getAll(query, userId, postId);
   }
 
   @UseGuards(JwtOptionalAuthGuard)
@@ -117,7 +118,7 @@ export class PostsController {
       new CreateCommentCommand(data),
     );
 
-    return this.commentsQueryRepository.getById(commentId);
+    return this.commentsSqlQueryRepository.getById(commentId);
   }
 
   @UseGuards(JwtAuthGuard)

@@ -1,10 +1,9 @@
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { CreateCommentInputDto } from '../../api/input-dto/create-comment.input-dto';
-import { InjectModel } from '@nestjs/mongoose';
-import { CommentModelType, Comment } from '../../domain/comment.entity';
-import { CommentsRepository } from '../../infrastructure/comments.repository';
-import { PostsRepository } from '../../../posts/infrastructure/posts.repository';
-import { UsersRepository } from '../../../../user-accounts/infrastructure/users.repository';
+import { CommentsSqlRepository } from '../../infrastructure/comments.sql-repository';
+import { PostsSqlRepository } from '../../../posts/infrastructure/posts-sql.repository';
+import { UsersSqlRepository } from '../../../../user-accounts/infrastructure/users-sql.repository';
+import { NotFoundDomainException } from '../../../../../core/exceptions/domain-exception';
 
 export class CreateCommentCommand {
   constructor(public dto: CreateCommentInputDto) {}
@@ -15,25 +14,25 @@ export class CreateCommentUseCase
   implements ICommandHandler<CreateCommentCommand, string>
 {
   constructor(
-    @InjectModel(Comment.name) private commentModel: CommentModelType,
-    private commentsRepository: CommentsRepository,
-    private postsRepository: PostsRepository,
-    private usersRepository: UsersRepository,
+    private commentsSqlRepository: CommentsSqlRepository,
+    private postsSqlRepository: PostsSqlRepository,
+    private usersSqlRepository: UsersSqlRepository,
   ) {}
 
   async execute(command: CreateCommentCommand) {
     const { postId, userId, content } = command.dto;
-    await this.postsRepository.findOneOrNotFoundError(postId);
-    const user = await this.usersRepository.findOneOrNotFoundError(userId);
-    const comment = this.commentModel.createInstance({
+    const post = await this.postsSqlRepository.findById(postId);
+    if (!post) throw NotFoundDomainException.create();
+
+    const user = await this.usersSqlRepository.findById(userId);
+    if (!user) throw NotFoundDomainException.create();
+
+    const comment = await this.commentsSqlRepository.create({
       postId,
       userId,
       content,
-      userLogin: user.login,
     });
 
-    await this.commentsRepository.save(comment);
-
-    return comment._id.toString();
+    return comment.id;
   }
 }

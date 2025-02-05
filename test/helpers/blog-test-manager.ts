@@ -17,7 +17,7 @@ export class BlogTestManager {
     statusCode: number = HttpStatus.CREATED,
   ): Promise<BlogSqlViewDto> {
     const response = await request(this.app.getHttpServer())
-      .post('/blogs')
+      .post('/sa/blogs')
       .auth(authBasicData.login, authBasicData.password)
       .send(model)
       .expect(statusCode);
@@ -31,7 +31,7 @@ export class BlogTestManager {
     statusCode: number = HttpStatus.NO_CONTENT,
   ): Promise<void> {
     await request(this.app.getHttpServer())
-      .put(`/blogs/${id}`)
+      .put(`/sa/blogs/${id}`)
       .auth(authBasicData.login, authBasicData.password)
       .send(model)
       .expect(statusCode);
@@ -42,7 +42,7 @@ export class BlogTestManager {
     statusCode: number = HttpStatus.NO_CONTENT,
   ): Promise<void> {
     await request(this.app.getHttpServer())
-      .delete(`/blogs/${id}`)
+      .delete(`/sa/blogs/${id}`)
       .auth(authBasicData.login, authBasicData.password)
       .expect(statusCode);
   }
@@ -53,7 +53,7 @@ export class BlogTestManager {
     statusCode: number = HttpStatus.CREATED,
   ): Promise<PostViewDto> {
     const response = await request(this.app.getHttpServer())
-      .post(`/blogs/${blogId}/posts`)
+      .post(`/sa/blogs/${blogId}/posts`)
       .auth(authBasicData.login, authBasicData.password)
       .send(model)
       .expect(statusCode);

@@ -5,6 +5,16 @@ export enum DeletionStatus {
   PermanentDeleted = 1,
 }
 
+export const loginConstraints = {
+  minLength: 3,
+  maxLength: 10,
+};
+
+export const passwordConstraints = {
+  minLength: 6,
+  maxLength: 20,
+};
+
 export class User {
   id: string;
   login: string;

@@ -60,7 +60,7 @@ describe('BlogsController', () => {
   describe('POST /blogs', () => {
     it('should create new blog', async () => {
       const result = await request(httpServer)
-        .post('/blogs')
+        .post('/sa/blogs')
         .auth(authBasicData.login, authBasicData.password)
         .send(newBlogData)
         .expect(HttpStatus.CREATED);
@@ -98,7 +98,7 @@ describe('BlogsController', () => {
       const blog = await blogTestManager.createBlog(newBlogData);
 
       await request(httpServer)
-        .delete(`/blogs/${blog.id}`)
+        .delete(`/sa/blogs/${blog.id}`)
         .auth(authBasicData.login, authBasicData.password)
         .expect(HttpStatus.NO_CONTENT);
     });
@@ -108,7 +108,7 @@ describe('BlogsController', () => {
     it('should create post by blog', async () => {
       const blog = await blogTestManager.createBlog(newBlogData);
       const post = await request(httpServer)
-        .post(`/blogs/${blog.id}/posts`)
+        .post(`/sa/blogs/${blog.id}/posts`)
         .auth(authBasicData.login, authBasicData.password)
         .send(newPostData)
         .expect(HttpStatus.CREATED);

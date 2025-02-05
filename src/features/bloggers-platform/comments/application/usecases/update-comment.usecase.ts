@@ -1,9 +1,7 @@
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
-import { InjectModel } from '@nestjs/mongoose';
-import { Comment, CommentModelType } from '../../domain/comment.entity';
-import { CommentsRepository } from '../../infrastructure/comments.repository';
 import { CommentsService } from '../comments.service';
 import { UpdateCommentCommandDto } from '../../dto/update-comment.dto';
+import { CommentsSqlRepository } from '../../infrastructure/comments.sql-repository';
 
 export class UpdateCommentCommand {
   constructor(public dto: UpdateCommentCommandDto) {}
@@ -14,8 +12,7 @@ export class UpdateCommentUseCase
   implements ICommandHandler<UpdateCommentCommand, void>
 {
   constructor(
-    @InjectModel(Comment.name) private commentModel: CommentModelType,
-    private commentsRepository: CommentsRepository,
+    private commentsSqlRepository: CommentsSqlRepository,
     private commentsService: CommentsService,
   ) {}
 
@@ -28,6 +25,6 @@ export class UpdateCommentUseCase
 
     comment.update({ content });
 
-    await this.commentsRepository.save(comment);
+    await this.commentsSqlRepository.save(comment);
   }
 }
