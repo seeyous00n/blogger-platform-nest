@@ -33,30 +33,30 @@ export class PostsSqlQueryRepository {
     }
 
     const sqlQuery = `
-        SELECT p.id,
-               title,
-               short_description,
-               content,
-               blog_id,
-               name                                                                        AS blog_name,
-               p.created_at,
-               ${authorId ? condition[0] : "'None' "}                                      AS my_status,
-               (SELECT COUNT(*) FROM "like" WHERE parent_id = p.id AND status = 'Like')    AS likes_count,
-               (SELECT COUNT(*) FROM "like" WHERE parent_id = p.id AND status = 'Dislike') AS dislikes_count,
-               (SELECT JSON_AGG(sub_likes)
-                FROM (SELECT u.id::VARCHAR AS "userId", u.login, l.created_at AS "addedAt"
-                      FROM "like" l
-                               LEFT JOIN "user" u ON l.author_id = u.id
-                      WHERE parent_id = p.id
-                        AND is_new_like = 1
-                        AND status = 'Like'
-                      ORDER BY l.created_at DESC LIMIT 3) AS sub_likes)                    AS newest_likes
-        FROM "post" p
-                 LEFT JOIN "blog" b ON p.blog_id = b.id
-        WHERE p.deletion_status = false ${authorId && id ? condition[1] : id ? condition[0] : ''}
-        ORDER BY ${sortBy} ${query.sortDirection}
-            LIMIT $1
-        OFFSET $2
+      SELECT p.id,
+             title,
+             short_description,
+             content,
+             blog_id,
+             b.name                                                                      AS blog_name,
+             p.created_at,
+             ${authorId ? condition[0] : "'None' "}                                      AS my_status,
+             (SELECT COUNT(*) FROM "like" WHERE parent_id = p.id AND status = 'Like')    AS likes_count,
+             (SELECT COUNT(*) FROM "like" WHERE parent_id = p.id AND status = 'Dislike') AS dislikes_count,
+             (SELECT JSON_AGG(sub_likes)
+              FROM (SELECT u.id::VARCHAR AS "userId", u.login, l.created_at AS "addedAt"
+                    FROM "like" l
+                           LEFT JOIN "user" u ON l.author_id = u.id
+                    WHERE parent_id = p.id
+                      AND is_new_like = 1
+                      AND status = 'Like'
+                    ORDER BY l.created_at DESC LIMIT 3) AS sub_likes)                    AS newest_likes
+      FROM "post" p
+             LEFT JOIN "blog" b ON p.blog_id = b.id
+      WHERE p.deletion_status = false ${authorId && id ? condition[1] : id ? condition[0] : ''}
+      ORDER BY ${sortBy} ${query.sortDirection}
+        LIMIT $1
+      OFFSET $2
     `;
 
     const posts = await this.datasource.query(sqlQuery, params);
@@ -93,17 +93,11 @@ export class PostsSqlQueryRepository {
                short_description,
                content,
                blog_id,
-               b.name                                                   AS blog_name,
+               b.name                                                                      AS blog_name,
                p.created_at,
-               ${condition}                                             AS my_status,
-               (SELECT COUNT(*)
-                FROM "like"
-                WHERE parent_id = p.id
-                  AND status = 'Like')                                  AS likes_count,
-               (SELECT COUNT(*)
-                FROM "like"
-                WHERE parent_id = p.id
-                  AND status = 'Dislike')                               AS dislikes_count,
+               ${condition}                                                                AS my_status,
+               (SELECT COUNT(*) FROM "like" WHERE parent_id = p.id AND status = 'Like')    AS likes_count,
+               (SELECT COUNT(*) FROM "like" WHERE parent_id = p.id AND status = 'Dislike') AS dislikes_count,
                (SELECT JSON_AGG(sub_likes)
                 FROM (SELECT u.id::VARCHAR AS "userId", u.login, l.created_at AS "addedAt"
                       FROM "like" l
@@ -111,10 +105,9 @@ export class PostsSqlQueryRepository {
                       WHERE parent_id = p.id
                         AND is_new_like = 1
                         AND status = 'Like'
-                      ORDER BY l.created_at DESC LIMIT 3) AS sub_likes) AS newest_likes
+                      ORDER BY l.created_at DESC LIMIT 3) AS sub_likes)                    AS newest_likes
         FROM "post" p
-                 LEFT JOIN "blog" b
-                           ON p.blog_id = b.id
+                 LEFT JOIN "blog" b ON p.blog_id = b.id
         WHERE p.id = $1
           AND p.deletion_status = false`;
 
