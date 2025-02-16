@@ -3,8 +3,6 @@ import { AppModule } from '../../src/app.module';
 import { EmailService } from '../../src/features/notifications/email.service';
 import { EmailServiceMock } from '../mock/email-service.mock';
 import { appSetup } from '../../src/setup/app.setup';
-import { Connection } from 'mongoose';
-import { getConnectionToken } from '@nestjs/mongoose';
 import { deleteAllData } from './delete-all-data';
 import { UserTestManager } from './user-test-manager';
 import { BlogTestManager } from './blog-test-manager';
@@ -41,7 +39,6 @@ export const initSettings = async (
 
   await app.init();
 
-  const dbConnection = app.get<Connection>(getConnectionToken());
   const dataSource = app.get(DataSource);
   const httpServer = app.getHttpServer();
 
@@ -49,7 +46,6 @@ export const initSettings = async (
 
   return {
     app,
-    dbConnection,
     httpServer,
     userTestManager,
     blogTestManager,

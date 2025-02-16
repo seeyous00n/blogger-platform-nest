@@ -12,7 +12,6 @@ import { ACCESS_TOKEN_INJECT } from '../src/features/user-accounts/constants/aut
 describe('AuthController', () => {
   let app: INestApplication;
   let httpServer;
-  let dbConnection;
   let dataSource;
   let userTestManager: UserTestManager;
 
@@ -31,7 +30,6 @@ describe('AuthController', () => {
 
     app = result.app;
     httpServer = result.httpServer;
-    dbConnection = result.dbConnection;
     dataSource = result.dataSource;
     userTestManager = result.userTestManager;
   });

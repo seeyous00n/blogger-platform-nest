@@ -20,7 +20,6 @@ describe('CommentController', () => {
   let postTestManager: PostTestManager;
   let userTestManager: UserTestManager;
   let commentTestManager: CommentTestManager;
-  let dbConnection;
   let dataSource;
 
   beforeAll(async () => {
@@ -32,7 +31,6 @@ describe('CommentController', () => {
     postTestManager = result.postTestManager;
     userTestManager = result.userTestManager;
     commentTestManager = result.commentTestManager;
-    dbConnection = result.dbConnection;
     dataSource = result.dataSource;
   });
 
