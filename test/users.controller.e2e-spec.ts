@@ -56,7 +56,7 @@ describe('UsersController', () => {
       expect(users.pagesCount).toBe(0);
       expect(users.page).toBe(1);
       expect(users.pageSize).toBe(10);
-      expect(users.totalCount).toBe(0);
+      expect(users.totalCount).toBe('0');
       expect(users.items).toStrictEqual([]);
     });
 
@@ -70,7 +70,7 @@ describe('UsersController', () => {
       expect(usersWithPagination.page).toBe(2);
       expect(usersWithPagination.pageSize).toBe(2);
 
-      expect(usersWithPagination.totalCount).toBe(5);
+      expect(usersWithPagination.totalCount).toBe('5');
       expect(usersWithPagination.items.length).toBe(2);
     });
 
@@ -84,7 +84,7 @@ describe('UsersController', () => {
 
       const usersWithPagination = await userTestManager.getUsers();
 
-      expect(usersWithPagination.totalCount).toBe(4);
+      expect(usersWithPagination.totalCount).toBe('4');
       expect(usersWithPagination.items.length).toBe(4);
     });
   });

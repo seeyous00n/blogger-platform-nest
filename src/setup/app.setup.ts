@@ -1,6 +1,6 @@
 import { INestApplication } from '@nestjs/common';
 import { pipesSetup } from './pipes.setup';
-import cookieParser from 'cookie-parser';
+import * as cookieParser from 'cookie-parser';
 import { validationConstraintSetup } from './validation-constraint.setup';
 import { exceptionFilterSetup } from './exception-filter.setup';
 
