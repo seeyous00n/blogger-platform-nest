@@ -2,7 +2,7 @@ import { IsEmail, IsString, Length, Matches } from 'class-validator';
 import {
   loginConstraints,
   passwordConstraints,
-} from '../../domain/user.entity';
+} from '../../domain/user.sql-entity';
 
 export class CreateUserInputDto {
   @IsString()

@@ -1,6 +1,6 @@
 import { HttpStatus, INestApplication } from '@nestjs/common';
 import { CreateBlogInputDto } from '../../src/features/bloggers-platform/blogs/api/input-dto/create-blog.input-dto';
-import { BlogViewDto } from '../../src/features/bloggers-platform/blogs/api/view-dto/blog.view-dto';
+import { BlogSqlViewDto } from '../../src/features/bloggers-platform/blogs/api/view-dto/blog.view-dto';
 import * as request from 'supertest';
 import { authBasicData } from '../mock/mock-data';
 import { UpdateBlogInputDto } from '../../src/features/bloggers-platform/blogs/api/input-dto/update-blog.input-dto';
@@ -15,9 +15,9 @@ export class BlogTestManager {
   async createBlog(
     model: CreateBlogInputDto,
     statusCode: number = HttpStatus.CREATED,
-  ): Promise<BlogViewDto> {
+  ): Promise<BlogSqlViewDto> {
     const response = await request(this.app.getHttpServer())
-      .post('/blogs')
+      .post('/sa/blogs')
       .auth(authBasicData.login, authBasicData.password)
       .send(model)
       .expect(statusCode);
@@ -31,7 +31,7 @@ export class BlogTestManager {
     statusCode: number = HttpStatus.NO_CONTENT,
   ): Promise<void> {
     await request(this.app.getHttpServer())
-      .put(`/blogs/${id}`)
+      .put(`/sa/blogs/${id}`)
       .auth(authBasicData.login, authBasicData.password)
       .send(model)
       .expect(statusCode);
@@ -42,7 +42,7 @@ export class BlogTestManager {
     statusCode: number = HttpStatus.NO_CONTENT,
   ): Promise<void> {
     await request(this.app.getHttpServer())
-      .delete(`/blogs/${id}`)
+      .delete(`/sa/blogs/${id}`)
       .auth(authBasicData.login, authBasicData.password)
       .expect(statusCode);
   }
@@ -53,7 +53,7 @@ export class BlogTestManager {
     statusCode: number = HttpStatus.CREATED,
   ): Promise<PostViewDto> {
     const response = await request(this.app.getHttpServer())
-      .post(`/blogs/${blogId}/posts`)
+      .post(`/sa/blogs/${blogId}/posts`)
       .auth(authBasicData.login, authBasicData.password)
       .send(model)
       .expect(statusCode);
@@ -64,7 +64,7 @@ export class BlogTestManager {
   async getBlogs(
     queryString?: GetBlogQueryParams,
     statusCode: number = HttpStatus.OK,
-  ): Promise<PaginationViewDto<BlogViewDto[]>> {
+  ): Promise<PaginationViewDto<BlogSqlViewDto[]>> {
     const response = await request(this.app.getHttpServer())
       .get('/blogs')
       .query(queryString)
@@ -73,8 +73,8 @@ export class BlogTestManager {
     return response.body;
   }
 
-  async createSeveralBlogs(count: number): Promise<BlogViewDto[]> {
-    const blogs: Promise<BlogViewDto>[] = [];
+  async createSeveralBlogs(count: number): Promise<BlogSqlViewDto[]> {
+    const blogs: Promise<BlogSqlViewDto>[] = [];
 
     for (let i = 0; i < count; i++) {
       const blog = this.createBlog({

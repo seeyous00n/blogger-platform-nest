@@ -8,7 +8,6 @@ import {
   Req,
   UseGuards,
 } from '@nestjs/common';
-import { SecurityQueryRepository } from '../infrastructure/query/security.query-repository';
 import { JwtRefreshAuthGuard } from '../guards/jwt-refresh-auth.guard';
 import { userIdFromParam } from '../../../core/decorators/userId-from-request.param.decorator';
 import { CommandBus } from '@nestjs/cqrs';
@@ -17,19 +16,20 @@ import { DeleteSessionsCommand } from '../application/usecases/delete-sessions.u
 import { Request } from 'express';
 import { tokensName } from '../types/types';
 import { SkipThrottle } from '@nestjs/throttler';
+import { SecuritySqlQueryRepository } from '../infrastructure/query/security-sql.query-repository';
 
 @SkipThrottle()
 @Controller('security')
 export class SecurityController {
   constructor(
-    private securityQueryRepository: SecurityQueryRepository,
+    private securitySqlQueryRepository: SecuritySqlQueryRepository,
     private commandBus: CommandBus,
   ) {}
 
   @UseGuards(JwtRefreshAuthGuard)
   @Get('devices')
   async getDevices(@userIdFromParam() userId: string) {
-    return this.securityQueryRepository.getAllDevices(userId);
+    return this.securitySqlQueryRepository.getAllDevices(userId);
   }
 
   @UseGuards(JwtRefreshAuthGuard)

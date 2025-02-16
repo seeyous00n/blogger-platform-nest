@@ -1,7 +1,7 @@
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
-import { AuthRepository } from '../../infrastructure/auth.repository';
 import { AuthService } from '../auth.service';
 import { TokensDto } from '../../dto/tokens.dto';
+import { AuthSqlRepository } from '../../infrastructure/auth-sql.repository';
 
 export class RefreshTokenCommand {
   constructor(public token: string) {}
@@ -12,7 +12,7 @@ export class RefreshTokenUseCase
   implements ICommandHandler<RefreshTokenCommand, TokensDto>
 {
   constructor(
-    private authRepository: AuthRepository,
+    private authSqlRepository: AuthSqlRepository,
     private authService: AuthService,
   ) {}
 
@@ -33,7 +33,7 @@ export class RefreshTokenUseCase
     };
     session.update(data);
 
-    await this.authRepository.save(session);
+    await this.authSqlRepository.save(session);
 
     return {
       accessToken: tokens.accessToken,

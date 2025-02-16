@@ -1,45 +1,50 @@
 import { Injectable } from '@nestjs/common';
-import { InjectModel } from '@nestjs/mongoose';
-import { Post, PostModelType } from '../domain/post.entity';
-import { PostsRepository } from '../infrastructure/posts.repository';
-import { BlogsRepository } from '../../blogs/infrastructure/blogs.repository';
 import { UpdatePostDto } from '../dto/update-post.dto';
 import { CreatePostDto } from '../dto/create-post.dto';
+import { BlogsSqlRepository } from '../../blogs/infrastructure/blogs-sql.repository';
+import { PostsSqlRepository } from '../infrastructure/posts-sql.repository';
+import { NotFoundDomainException } from '../../../../core/exceptions/domain-exception';
 
 @Injectable()
 export class PostsService {
   constructor(
-    @InjectModel(Post.name) private PostModel: PostModelType,
-    private blogsRepository: BlogsRepository,
-    private postsRepository: PostsRepository,
+    private blogsSqlRepository: BlogsSqlRepository,
+    private postsSqlRepository: PostsSqlRepository,
   ) {}
 
-  async createPost(dto: Omit<CreatePostDto, 'blogName'>) {
-    const blog = await this.blogsRepository.findOneOrNotFoundError(dto.blogId);
-    const post = this.PostModel.createInstance({
-      ...dto,
-      blogName: blog.name,
-    });
-    await this.postsRepository.save(post);
+  async createPost(dto: CreatePostDto) {
+    const blog = await this.blogsSqlRepository.findById(dto.blogId);
+    if (!blog) throw NotFoundDomainException.create();
 
-    return post._id.toString();
+    const post = await this.postsSqlRepository.create({
+      ...dto,
+    });
+    if (!post) throw NotFoundDomainException.create();
+
+    return post.id;
   }
 
   async updatePost(id: string, dto: UpdatePostDto) {
-    const post = await this.postsRepository.findOneOrNotFoundError(id);
+    const post = await this.postsSqlRepository.findById(id);
+    if (!post) throw NotFoundDomainException.create();
+
     post.update(dto);
-    await this.postsRepository.save(post);
+
+    await this.postsSqlRepository.save(post);
   }
 
   async deletePost(id: string) {
-    const post = await this.postsRepository.findOneOrNotFoundError(id);
+    const post = await this.postsSqlRepository.findById(id);
+    if (!post) throw NotFoundDomainException.create();
+
     post.makeDeleted();
-    await this.postsRepository.save(post);
+    await this.postsSqlRepository.save(post);
   }
 
   async getPostId(id: string) {
-    const post = await this.postsRepository.findOneOrNotFoundError(id);
+    const post = await this.postsSqlRepository.findById(id);
+    if (!post) throw NotFoundDomainException.create();
 
-    return post._id.toString();
+    return post.id;
   }
 }

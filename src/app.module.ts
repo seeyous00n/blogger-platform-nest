@@ -2,7 +2,6 @@ import { config } from './config/config';
 import { Module } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
-import { MongooseModule } from '@nestjs/mongoose';
 import { UserAccountsModule } from './features/user-accounts/user-accounts.module';
 import { TestingModule } from './features/testing/testing.module';
 import { BloggersPlatformModule } from './features/bloggers-platform/bloggers-platform.module';
@@ -11,6 +10,7 @@ import { AppConfig } from './config/app.config';
 import { CoreModule } from './core/core.module';
 import * as process from 'node:process';
 import { AppConfigModule } from './config/app-config.module';
+import { TypeOrmModule } from '@nestjs/typeorm';
 
 const testingModule = [];
 if (
@@ -24,9 +24,16 @@ if (
   imports: [
     config,
     CoreModule,
-    MongooseModule.forRootAsync({
+    TypeOrmModule.forRootAsync({
       imports: [AppConfigModule],
-      useFactory: (appConfig: AppConfig) => ({ uri: appConfig.mongoURI }),
+      useFactory: (appConfig: AppConfig) => ({
+        type: appConfig.dbType,
+        host: appConfig.dbHost,
+        port: appConfig.dbPort,
+        username: appConfig.dbUserName,
+        password: appConfig.dbPassword,
+        database: appConfig.dbName,
+      }),
       inject: [AppConfig],
     }),
     ThrottlerModule.forRootAsync({

@@ -1,4 +1,9 @@
-import { SessionDocument } from '../../domain/session.entity';
+export class SessionSqlDto {
+  ip: string;
+  title: string;
+  last_active_date: Date;
+  device_id: string;
+}
 
 export class SecurityViewDto {
   ip: string;
@@ -6,12 +11,12 @@ export class SecurityViewDto {
   lastActiveDate: Date;
   deviceId: string;
 
-  static mapToView(session: SessionDocument): SecurityViewDto {
+  static mapToView(session: SessionSqlDto): SecurityViewDto {
     const dto = new SecurityViewDto();
     dto.ip = session.ip;
     dto.title = session.title;
-    dto.lastActiveDate = session.lastActiveDate;
-    dto.deviceId = session.deviceId;
+    dto.lastActiveDate = session.last_active_date;
+    dto.deviceId = session.device_id;
 
     return dto;
   }

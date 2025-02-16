@@ -23,6 +23,7 @@ describe('PostsController', () => {
   let userTestManager: UserTestManager;
   let commentTestManager: CommentTestManager;
   let dbConnection;
+  let dataSource;
 
   beforeAll(async () => {
     const result = await initSettings();
@@ -34,6 +35,7 @@ describe('PostsController', () => {
     userTestManager = result.userTestManager;
     commentTestManager = result.commentTestManager;
     dbConnection = result.dbConnection;
+    dataSource = result.dataSource;
   });
 
   beforeEach(async () => {
@@ -260,13 +262,16 @@ describe('PostsController', () => {
         .send({ likeStatus: 'Like' })
         .expect(HttpStatus.NO_CONTENT);
 
-      const likeData = await dbConnection.model('Like').findOne({
-        authorId: users[0].id,
-        parentId: posts[0].id,
-      });
+      const likeData = await dataSource.query(
+        `SELECT *
+         FROM "like"
+         WHERE author_id = $1
+           AND parent_id = $2`,
+        [users[0].id, posts[0].id],
+      );
 
-      expect(likeData.status).toBe('Like');
-      expect(likeData.isNewLike).toBe(1);
+      expect(likeData[0].status).toBe('Like');
+      expect(likeData[0].is_new_like).toBe(1);
 
       const post = await request(httpServer)
         .get(`/posts/${posts[0].id}`)

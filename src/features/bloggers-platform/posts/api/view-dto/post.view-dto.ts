@@ -1,5 +1,6 @@
 import { ObjectId } from 'mongoose';
 import { DeletionStatus } from '../../../../../core/types/enums';
+import { MyStatus } from '../../../likes/domain/like.sql-entity';
 
 export class PostLeanDto {
   _id: ObjectId;
@@ -17,10 +18,11 @@ export class NewestLikes {
   userId: string;
   login: string;
 }
+
 export class ExtendedLikesInfo {
   likesCount: number;
   dislikesCount: number;
-  myStatus: string;
+  myStatus: MyStatus;
   newestLikes: NewestLikes[];
 }
 
@@ -55,6 +57,50 @@ export class PostViewDto {
     dto.blogName = post.blogName;
     dto.createdAt = post.createdAt;
     dto.extendedLikesInfo = post.extendedLikesInfo;
+
+    return dto;
+  }
+}
+
+export class PostSqlDto {
+  id: string;
+  title: string;
+  short_description: string;
+  content: string;
+  blog_id: string;
+  blog_name: string;
+  created_at: Date;
+  likes_count: number;
+  dislikes_count: number;
+  my_status: MyStatus;
+  newest_likes: NewestLikes[];
+}
+
+export class PostSqlViewDto {
+  id: string;
+  title: string;
+  shortDescription: string;
+  content: string;
+  blogId: string;
+  blogName: string;
+  createdAt: Date;
+  extendedLikesInfo: ExtendedLikesInfo;
+
+  static mapToView(post: PostSqlDto): PostSqlViewDto {
+    const dto = new PostSqlViewDto();
+    dto.id = String(post.id);
+    dto.title = post.title;
+    dto.shortDescription = post.short_description;
+    dto.content = post.content;
+    dto.blogId = String(post.blog_id);
+    dto.blogName = post.blog_name;
+    dto.createdAt = post.created_at;
+    dto.extendedLikesInfo = {
+      likesCount: Number(post.likes_count),
+      dislikesCount: Number(post.dislikes_count),
+      myStatus: post.my_status ? post.my_status : MyStatus.None,
+      newestLikes: post.newest_likes ? post.newest_likes : [],
+    };
 
     return dto;
   }

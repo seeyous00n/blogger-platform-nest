@@ -18,8 +18,7 @@ import {
 } from '../../../core/decorators/ip-and-user-agent.param.decorator';
 import { JwtAuthGuard } from '../guards/jwt-auth.guard';
 import { userIdFromParam } from '../../../core/decorators/userId-from-request.param.decorator';
-import { UsersQueryRepository } from '../infrastructure/query/users.query-repository';
-import { UserViewAuthDto } from './view-dto/user.view-dto';
+import { UserSqlViewAuthDto } from './view-dto/user.view-dto';
 import { UsersService } from '../application/users.service';
 import { ConfirmationCodeInputDto } from './input-dto/confirmation-code.input-dto';
 import { EmailInputDto } from './input-dto/email.input-dto';
@@ -33,13 +32,14 @@ import { CommandBus } from '@nestjs/cqrs';
 import { LogoutCommand } from '../application/usecases/logout.usecese';
 import { RefreshTokenCommand } from '../application/usecases/refresh-token.usecese';
 import { SkipThrottle } from '@nestjs/throttler';
+import { UsersSqlQueryRepository } from '../infrastructure/query/users-sql.query-repository';
 
 @Controller('auth')
 export class AuthController {
   constructor(
     private authService: AuthService,
-    private usersQueryRepository: UsersQueryRepository,
     private usersService: UsersService,
+    private usersSqlQueryRepository: UsersSqlQueryRepository,
     private commandBus: CommandBus,
   ) {}
 
@@ -71,9 +71,8 @@ export class AuthController {
   @SkipThrottle()
   @UseGuards(JwtAuthGuard)
   @Get('me')
-  async getMe(@userIdFromParam() userId: string): Promise<UserViewAuthDto> {
-    const user =
-      this.usersQueryRepository.getAuthUserByIdOrNotFoundError(userId);
+  async getMe(@userIdFromParam() userId: string): Promise<UserSqlViewAuthDto> {
+    const user = await this.usersSqlQueryRepository.getAuthUser(userId);
     if (!user) {
       throw NotFoundDomainException.create();
     }

@@ -4,7 +4,7 @@ import {
   blogDescriptionConstraints,
   blogNameConstraints,
   blogWebsiteUrlConstraints,
-} from '../../domain/blog.entity';
+} from '../../domain/blog.sql-entity';
 
 export class UpdateBlogInputDto {
   @IsStringWithTrim(1, blogNameConstraints.maxLength)
