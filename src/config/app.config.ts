@@ -8,8 +8,8 @@ export class AppConfig {
   @IsNumber({}, { message: 'Set the PORT in env file!' })
   port: number = Number(this.configService.get<number>('PORT'));
 
-  @IsNotEmpty({ message: 'Set the MONGO_URI in env file!' })
-  mongoURI: string = this.configService.get<string>('MONGO_URI');
+  // @IsNotEmpty({ message: 'Set the MONGO_URI in env file!' })
+  // mongoURI: string = this.configService.get<string>('MONGO_URI');
 
   @IsNumber()
   restrictionTTL: number = Number(
