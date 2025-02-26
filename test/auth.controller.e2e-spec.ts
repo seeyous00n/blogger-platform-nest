@@ -108,11 +108,20 @@ describe('AuthController', () => {
       const users = await userTestManager.getUsers();
 
       const user = await dataSource.query(
-        `SELECT *
-                 FROM "user"
-                 WHERE id = $1`,
+        `SELECT u.*,
+                ei.email_confirmation_code,
+                ei.email_is_confirmed,
+                ei.email_code_expiration_date,
+                pi.password_recovery_code,
+                pi.password_expiration_date
+         FROM "user" u
+                LEFT JOIN email_info ei ON u.id = ei.user_id
+                LEFT JOIN password_info pi ON u.id = pi.user_id
+                 WHERE u.id = $1`,
         [users.items[0].id],
       );
+
+      console.log('user', user);
 
       await request(httpServer)
         .post('/auth/registration-confirmation')
@@ -120,9 +129,16 @@ describe('AuthController', () => {
         .expect(HttpStatus.NO_CONTENT);
 
       const userUpdateData = await dataSource.query(
-        `SELECT *
-                 FROM "user"
-                 WHERE id = $1`,
+        `SELECT u.*,
+                ei.email_confirmation_code,
+                ei.email_is_confirmed,
+                ei.email_code_expiration_date,
+                pi.password_recovery_code,
+                pi.password_expiration_date
+         FROM "user" u
+                LEFT JOIN email_info ei ON u.id = ei.user_id
+                LEFT JOIN password_info pi ON u.id = pi.user_id
+                 WHERE u.id = $1`,
         [users.items[0].id],
       );
       expect(userUpdateData[0].email_is_confirmed).toBe(true);
@@ -134,8 +150,15 @@ describe('AuthController', () => {
       await userTestManager.registrationUser(newUserData);
 
       const user = await dataSource.query(
-        `SELECT *
-                 FROM "user"`,
+        `SELECT u.*,
+                ei.email_confirmation_code,
+                ei.email_is_confirmed,
+                ei.email_code_expiration_date,
+                pi.password_recovery_code,
+                pi.password_expiration_date
+         FROM "user" u
+                LEFT JOIN email_info ei ON u.id = ei.user_id
+                LEFT JOIN password_info pi ON u.id = pi.user_id`,
       );
 
       await request(httpServer)
@@ -144,8 +167,15 @@ describe('AuthController', () => {
         .expect(HttpStatus.NO_CONTENT);
 
       const userUpdateData = await dataSource.query(
-        `SELECT *
-                 FROM "user"`,
+        `SELECT u.*,
+                ei.email_confirmation_code,
+                ei.email_is_confirmed,
+                ei.email_code_expiration_date,
+                pi.password_recovery_code,
+                pi.password_expiration_date
+         FROM "user" u
+                LEFT JOIN email_info ei ON u.id = ei.user_id
+                LEFT JOIN password_info pi ON u.id = pi.user_id`,
       );
       expect(user[0].email_confirmation_code).not.toBe(
         userUpdateData[0].email_confirmation_code,
@@ -158,8 +188,15 @@ describe('AuthController', () => {
       await userTestManager.registrationUser(newUserData);
 
       const user = await dataSource.query(
-        `SELECT *
-                 FROM "user"`,
+        `SELECT u.*,
+                ei.email_confirmation_code,
+                ei.email_is_confirmed,
+                ei.email_code_expiration_date,
+                pi.password_recovery_code,
+                pi.password_expiration_date
+         FROM "user" u
+                LEFT JOIN email_info ei ON u.id = ei.user_id
+                LEFT JOIN password_info pi ON u.id = pi.user_id`,
       );
 
       expect(user[0].password_recovery_code).toBe(null);
@@ -171,8 +208,15 @@ describe('AuthController', () => {
         .expect(HttpStatus.NO_CONTENT);
 
       const userUpdate = await dataSource.query(
-        `SELECT *
-                 FROM "user"`,
+        `SELECT u.*,
+                ei.email_confirmation_code,
+                ei.email_is_confirmed,
+                ei.email_code_expiration_date,
+                pi.password_recovery_code,
+                pi.password_expiration_date
+         FROM "user" u
+                LEFT JOIN email_info ei ON u.id = ei.user_id
+                LEFT JOIN password_info pi ON u.id = pi.user_id`,
       );
       expect(userUpdate[0]).toHaveProperty('password_recovery_code');
       expect(userUpdate[0]).toHaveProperty('password_expiration_date');
@@ -191,8 +235,15 @@ describe('AuthController', () => {
         .expect(HttpStatus.NO_CONTENT);
 
       const user = await dataSource.query(
-        `SELECT *
-                 FROM "user"`,
+        `SELECT u.*,
+                ei.email_confirmation_code,
+                ei.email_is_confirmed,
+                ei.email_code_expiration_date,
+                pi.password_recovery_code,
+                pi.password_expiration_date
+         FROM "user" u
+                LEFT JOIN email_info ei ON u.id = ei.user_id
+                LEFT JOIN password_info pi ON u.id = pi.user_id`,
       );
 
       await request(httpServer)
@@ -220,8 +271,15 @@ describe('AuthController', () => {
         .expect(HttpStatus.NO_CONTENT);
 
       const user = await dataSource.query(
-        `SELECT *
-                 FROM "user"`,
+        `SELECT u.*,
+                ei.email_confirmation_code,
+                ei.email_is_confirmed,
+                ei.email_code_expiration_date,
+                pi.password_recovery_code,
+                pi.password_expiration_date
+         FROM "user" u
+                LEFT JOIN email_info ei ON u.id = ei.user_id
+                LEFT JOIN password_info pi ON u.id = pi.user_id`,
       );
 
       await request(httpServer)
